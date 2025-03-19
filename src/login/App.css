@@ -1,0 +1,116 @@
+/* App.css */
+body, html {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  font-family: Arial, sans-serif;
+  }
+  
+  body {
+  background-image: url('../assets/scuolapennywirton.jpg'); /* Path to your image */
+  background-size: 100%; /* Ensures the image covers the entire background */
+  background-position: center; /* Centers the image */
+  background-repeat: no-repeat; /* Prevents the image from repeating */
+  position: relative;
+  background-color: rgb(255, 0, 38);
+  }
+  
+  #root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 1rem;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  }
+  
+  .log {
+  width: 100%;
+  max-width: 400px;
+  height: 100%;
+  padding: 2.5rem 1.5rem;
+  border-radius: 16px;
+  background-color: #ffffff;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  }
+  
+  .log-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  }
+  
+  h2 {
+  margin: 0 0 2rem 0;
+  font-size: 1.75rem;
+  color: #2d3748;
+  font-weight: 600;
+  }
+  
+
+  h5 {
+  margin: 0 0 0.25rem 0;
+  font-size: 1rem;
+  color: #000000;
+  font-weight: 500;
+  text-align: left;
+  }
+  
+  input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+  }
+  
+  input:focus {
+  outline: none;
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+  }
+  
+  .button {
+  width: 100%;
+  height: 7%;
+  padding: 0.875rem;
+  margin-top: 1rem;
+  background-color: #4f46e5;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+  font-size: 0.875rem;
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  }
+  
+  input{
+  width: auto;
+  }
+  
+  .button:hover {
+  background-color: #4338ca;
+  transform: translateY(-1px);
+  }
+  
+  @media (max-width: 480px) {
+  #root {
+  padding: 1rem;
+  }
+  
+  .log {
+  padding: 2rem 1rem;
+  border-radius: 12px;
+  }
+  
+
+  }
