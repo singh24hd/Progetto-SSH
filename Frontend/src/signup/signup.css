@@ -6,11 +6,7 @@ body, html {
 }
 
 body {
-  background-image: url('../assets/scuolapennywirton.jpg');
-  background-size: 100%;
-  background-position: center;
-  background-repeat: no-repeat;
-  position: relative;
+
   background-color: rgb(255, 0, 38);
 }
 

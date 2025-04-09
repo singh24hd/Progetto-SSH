@@ -1,0 +1,71 @@
+body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    font-family: Arial, sans-serif;
+  }
+  
+  .attendance-container {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-image: url('../assets/scuolapennywirton.jpg');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-color: rgb(255, 0, 38);
+  }
+  
+  .attendance-form {
+    width: 100%;
+    max-width: 800px;
+    padding: 2.5rem 1.5rem;
+    border-radius: 16px;
+    background-color: #ffffff;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+  }
+  
+  .attendance-title {
+    text-align: center;
+    font-size: 1.75rem;
+    margin-bottom: 2rem;
+    color: #2d3748;
+    font-weight: 600;
+  }
+  
+  .attendance-chart {
+    margin-bottom: 2rem;
+  }
+  
+  .attendance-calendar {
+    margin: 2rem auto;
+    max-width: 350px;
+  }
+  
+  /* Personalizzazione dei tile del calendario in base alla presenza */
+  .react-calendar__tile.present {
+    background: green !important;
+    color: white;
+  }
+  
+  .react-calendar__tile.absent {
+    background: red !important;
+    color: white;
+  }
+  
+  .attendance-summary {
+    text-align: center;
+    font-size: 1.25rem;
+    margin-top: 2rem;
+    color: #2d3748;
+  }
+  
+  @media (max-width: 480px) {
+    .attendance-form {
+      padding: 2rem 1rem;
+      border-radius: 12px;
+    }
+  }
+  

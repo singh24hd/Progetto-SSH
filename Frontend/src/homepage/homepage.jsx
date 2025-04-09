@@ -1,196 +1,150 @@
-import React, { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { Line } from 'react-chartjs-2';
+import Calendar from 'react-calendar';
+import 'react-calendar/dist/Calendar.css';
 import './HomePage.css';
 
-const HomePage = () => {
-  const [isVisible, setIsVisible] = useState(false);
+const App = () => {
+  const [activeSection, setActiveSection] = useState('main');
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [posts, setPosts] = useState([
+    { id: 1, content: 'Video lezione matematica', type: 'video', rating: 8 },
+    { id: 2, content: 'App per esercizi storia', type: 'app', rating: 9 },
+    { id: 3, content: 'Documento letteratura', type: 'doc', rating: 7 },
+  ]);
 
-  useEffect(() => {
-    // Fade in elements when component mounts
-    setIsVisible(true);
-    
-    // Intersection Observer for scroll animations
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add('animate');
-          }
-        });
+  const attendanceData = {
+    labels: ['Sett 1', 'Sett 2', 'Sett 3', 'Sett 4'],
+    datasets: [
+      {
+        label: 'Presenze',
+        data: [12, 15, 13, 14],
+        borderColor: '#3B82F6',
+        tension: 0.1,
       },
-      { threshold: 0.1 }
-    );
-    
-    const elements = document.querySelectorAll('.scroll-animate');
-    elements.forEach((el) => observer.observe(el));
-    
-    return () => {
-      elements.forEach((el) => observer.unobserve(el));
-    };
-  }, []);
+    ],
+  };
+
+  const stories = [
+    { id: 1, teacher: 'Prof. Rossi', subject: 'Matematica' },
+    { id: 2, teacher: 'Prof. Verdi', subject: 'Storia' },
+    { id: 3, teacher: 'Prof. Bianchi', subject: 'Scienze' },
+  ];
+
+  const handleRate = (postId, rating) => {
+    setPosts(posts.map(post => 
+      post.id === postId ? { ...post, rating } : post
+    ));
+  };
 
   return (
-    <div className={`home-container ${isVisible ? 'visible' : ''}`}>
-      <header className="header">
-        <div className="logo">
-          <h1>Brand<span>Name</span></h1>
-        </div>
-        <nav className="nav">
-          <ul>
-            <li><a href="#home" className="active">Home</a></li>
-            <li><a href="#about">About</a></li>
-            <li><a href="#services">Services</a></li>
-            <li><a href="#portfolio">Portfolio</a></li>
-            <li><a href="#contact">Contact</a></li>
-          </ul>
-        </nav>
-        <div className="mobile-nav-toggle">
-          <span></span>
-          <span></span>
-          <span></span>
-        </div>
-      </header>
-
-      <section className="hero">
-        <div className="hero-content">
-          <h1 className="scroll-animate">Creating Digital <span>Experiences</span></h1>
-          <p className="scroll-animate">We build beautiful, responsive websites and applications that engage your audience.</p>
-          <div className="cta-buttons scroll-animate">
-            <button className="primary-btn">Get Started</button>
-            <button className="secondary-btn">Learn More</button>
-          </div>
-        </div>
-        <div className="hero-image scroll-animate">
-          {/* Replace with your image */}
-          <div className="placeholder-image"></div>
-        </div>
-      </section>
-
-      <section id="about" className="about-section">
-        <h2 className="section-title scroll-animate">About Us</h2>
-        <div className="about-content">
-          <div className="about-image scroll-animate">
-            {/* Replace with your image */}
-            <div className="placeholder-image"></div>
-          </div>
-          <div className="about-text">
-            <p className="scroll-animate">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam scelerisque, magna in faucibus vehicula, mi dui efficitur sapien, a congue tellus nisi sit amet ex.</p>
-            <p className="scroll-animate">Vivamus hendrerit rhoncus eros, nec ultrices neque finibus eget. Praesent vel tortor sagittis, commodo arcu vel, ultricies velit.</p>
-          </div>
-        </div>
-      </section>
-
-      <section id="services" className="services-section">
-        <h2 className="section-title scroll-animate">Our Services</h2>
-        <div className="services-grid">
-          <div className="service-card scroll-animate">
-            <div className="service-icon">✨</div>
-            <h3>Web Design</h3>
-            <p>Beautiful, modern designs tailored to your brand and business goals.</p>
-          </div>
-          <div className="service-card scroll-animate">
-            <div className="service-icon">💻</div>
-            <h3>Development</h3>
-            <p>Fast, responsive websites and applications built with the latest technologies.</p>
-          </div>
-          <div className="service-card scroll-animate">
-            <div className="service-icon">📱</div>
-            <h3>Mobile Apps</h3>
-            <p>Intuitive mobile experiences for iOS and Android platforms.</p>
-          </div>
-          <div className="service-card scroll-animate">
-            <div className="service-icon">📊</div>
-            <h3>SEO</h3>
-            <p>Optimize your online presence to reach more customers organically.</p>
-          </div>
-        </div>
-      </section>
-
-      <section id="portfolio" className="portfolio-section">
-        <h2 className="section-title scroll-animate">Our Work</h2>
-        <div className="portfolio-grid">
-          {[1, 2, 3, 4, 5, 6].map((item) => (
-            <div key={item} className="portfolio-item scroll-animate">
-              <div className="portfolio-image">
-                {/* Replace with your image */}
-                <div className="placeholder-image"></div>
+    <div className="app-container">
+      {/* Navbar */}
+      <nav className="navbar">
+        <div className="nav-content">
+          <h1 className="logo">Scuola Digitale</h1>
+          <div className="dropdown-wrapper">
+            <button 
+              onClick={() => setShowDropdown(!showDropdown)}
+              className="menu-button"
+            >
+              Menu ▾
+            </button>
+            {showDropdown && (
+              <div className="dropdown-menu">
+                <button
+                  onClick={() => setActiveSection('profile')}
+                  className="dropdown-item"
+                >
+                  Profilo
+                </button>
+                <button
+                  onClick={() => setActiveSection('attendance')}
+                  className="dropdown-item"
+                >
+                  Presenze
+                </button>
+                <button
+                  onClick={() => setActiveSection('main')}
+                  className="dropdown-item"
+                >
+                  Home
+                </button>
               </div>
-              <div className="portfolio-overlay">
-                <h4>Project {item}</h4>
-                <p>Web Design</p>
-                <a href="#" className="view-project">View Project</a>
+            )}
+          </div>
+        </div>
+      </nav>
+
+      {/* Main Content */}
+      <main className="main-content">
+        {activeSection === 'main' && (
+          <div>
+            {/* Stories */}
+            <div className="stories-section">
+              <h2 className="section-title">Lezioni in Evidenza</h2>
+              <div className="stories-container">
+                {stories.map(story => (
+                  <div 
+                    key={story.id}
+                    className="story-item"
+                  >
+                    {story.teacher}
+                  </div>
+                ))}
               </div>
             </div>
-          ))}
-        </div>
-      </section>
 
-      <section id="contact" className="contact-section">
-        <h2 className="section-title scroll-animate">Get In Touch</h2>
-        <div className="contact-container">
-          <div className="contact-info scroll-animate">
-            <div className="contact-item">
-              <div className="contact-icon">📍</div>
-              <p>123 Main Street, City, Country</p>
-            </div>
-            <div className="contact-item">
-              <div className="contact-icon">📞</div>
-              <p>+1 234 567 890</p>
-            </div>
-            <div className="contact-item">
-              <div className="contact-icon">✉️</div>
-              <p>hello@brandname.com</p>
+            {/* Posts */}
+            <div className="posts-container">
+              {posts.map(post => (
+                <div key={post.id} className="post-card">
+                  <div className="post-content">{post.content}</div>
+                  <div className="rating-container">
+                    <select 
+                      value={post.rating}
+                      onChange={(e) => handleRate(post.id, parseInt(e.target.value))}
+                      className="rating-select"
+                    >
+                      {[...Array(10).keys()].map(n => (
+                        <option key={n+1} value={n+1}>{n+1}</option>
+                      ))}
+                    </select>
+                    <span className="rating-value">★ {post.rating}/10</span>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
-          <form className="contact-form scroll-animate">
-            <div className="form-group">
-              <input type="text" placeholder="Your Name" required />
-            </div>
-            <div className="form-group">
-              <input type="email" placeholder="Your Email" required />
-            </div>
-            <div className="form-group">
-              <input type="text" placeholder="Subject" />
-            </div>
-            <div className="form-group">
-              <textarea placeholder="Your Message" rows="5" required></textarea>
-            </div>
-            <button type="submit" className="primary-btn">Send Message</button>
-          </form>
-        </div>
-      </section>
+        )}
 
-      <footer className="footer">
-        <div className="footer-content">
-          <div className="footer-logo">
-            <h2>Penny<span>Advice</span></h2>
-            <p>Creating digital experiences that inspire.</p>
-          </div>
-          <div className="footer-links">
-            <h3>Quick Links</h3>
-            <ul>
-              <li><a href="#home">Home</a></li>
-              <li><a href="#about">About</a></li>
-              <li><a href="#services">Services</a></li>
-              <li><a href="#portfolio">Portfolio</a></li>
-              <li><a href="#contact">Contact</a></li>
-            </ul>
-          </div>
-          <div className="footer-social">
-            <h3>Connect With Us</h3>
-            <div className="social-icons">
-              <a href="#" aria-label="Facebook">FB</a>
-              <a href="#" aria-label="Twitter">TW</a>
-              <a href="#" aria-label="Instagram">IG</a>
-              <a href="#" aria-label="LinkedIn">LI</a>
+        {activeSection === 'profile' && (
+          <div className="profile-section">
+            <h2 className="section-title">Profilo Studente</h2>
+            <div className="profile-info">
+              <p><span className="info-label">Nome:</span> Mario Rossi</p>
+              <p><span className="info-label">Classe:</span> 3°A</p>
+              <p><span className="info-label">Indirizzo:</span> Scientifico</p>
             </div>
           </div>
-        </div>
-        <div className="footer-bottom">
-          <p>&copy; {new Date().getFullYear()} BrandName. All Rights Reserved.</p>
-        </div>
-      </footer>
+        )}
+
+        {activeSection === 'attendance' && (
+          <div className="attendance-section">
+            <h2 className="section-title">Presenze</h2>
+            <div className="attendance-grid">
+              <div className="chart-container">
+                <Line data={attendanceData} />
+              </div>
+              <div className="calendar-container">
+                <Calendar className="custom-calendar" />
+              </div>
+            </div>
+          </div>
+        )}
+      </main>
     </div>
   );
 };
 
-export default HomePage;
+export default App;

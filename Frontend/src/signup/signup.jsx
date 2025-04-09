@@ -1,27 +1,14 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import './signup.css';
 
 function Signup() {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
-    nome: '',
-    cognome: '',
-    data_nasc: '',
-    luogo_nasc: '',
-    nazionalità: '',
-    telefono: '',
-    email: '',
-    indirizzo: '',
-    cap: '',
-    citta: '',
-    prov: '',
-    cod_fisc: '',
-    hashed_password: '' // You'll need to add a password field to your form
+    nome: '', cognome: '', data_nasc: '', luogo_nasc: '', nazionalità: '',
+    telefono: '', email: '', indirizzo: '', cap: '', citta: '', prov: '',
+    cod_fisc: '', hashed_password: '', codice_insegnante: ''
   });
-  
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -33,167 +20,56 @@ function Signup() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
-    setError(null);
-    
-    try {
+    const ruolo = formData.codice_insegnante === 'ABC123' ? 'insegnante' : 'studente';
 
-      
+    const body = {
+      ...formData,
+      ruolo,
+    };
+
+    try {
+      const response = await fetch("http://localhost:8000/register/", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body)
+      });
+
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.detail || 'Registration failed');
+        throw new Error(errorData.detail || 'Errore nella registrazione');
       }
-      
+
       const data = await response.json();
-      console.log('Registration successful:', data);
-      
-      // Redirect to email verification page
-      navigate('/verificaemail');
-      
+      if (data.ruolo === "insegnante") {
+        navigate("/homepage");
+      } else {
+        navigate("/homepage");
+      }
     } catch (err) {
-      console.error('Error during registration:', err);
-      setError(err.message || 'Si è verificato un errore. Riprova più tardi.');
-    } finally {
-      setLoading(false);
+      alert(err.message);
     }
   };
 
   return (
-    <>
-      <div className="signup-container">
-        <div className="signup-form">
-          <h2 className="signup-title">Registrati</h2>
-          {error && <div className="error-message">{error}</div>}
-          <form onSubmit={handleSubmit} className="signup-fields">
-            <input 
-              type="text" 
-              name="nome" 
-              placeholder="Nome" 
-              className="signup-input" 
-              value={formData.nome}
-              onChange={handleChange}
-              required 
-            />
-            <input 
-              type="text" 
-              name="cognome" 
-              placeholder="Cognome" 
-              className="signup-input" 
-              value={formData.cognome}
-              onChange={handleChange}
-              required 
-            />
-            <input 
-              type="date" 
-              name="data_nasc" 
-              placeholder="Data di Nascita" 
-              className="signup-input" 
-              value={formData.data_nasc}
-              onChange={handleChange}
-              required 
-            />
-            <input 
-              type="text" 
-              name="luogo_nasc" 
-              placeholder="Luogo di Nascita" 
-              className="signup-input" 
-              value={formData.luogo_nasc}
-              onChange={handleChange}
-              required 
-            />
-            <input 
-              type="text" 
-              name="nazionalità" 
-              placeholder="Nazionalità" 
-              className="signup-input" 
-              value={formData.nazionalità}
-              onChange={handleChange}
-              required 
-            />
-            <input 
-              type="tel" 
-              name="telefono" 
-              placeholder="Telefono" 
-              className="signup-input" 
-              value={formData.telefono}
-              onChange={handleChange}
-              required 
-            />
-            <input 
-              type="email" 
-              name="email" 
-              placeholder="Email" 
-              className="signup-input" 
-              value={formData.email}
-              onChange={handleChange}
-              required 
-            />
-            <input 
-              type="text" 
-              name="indirizzo" 
-              placeholder="Indirizzo" 
-              className="signup-input" 
-              value={formData.indirizzo}
-              onChange={handleChange}
-              required 
-            />
-            <input 
-              type="text" 
-              name="cap" 
-              placeholder="CAP" 
-              className="signup-input" 
-              value={formData.cap}
-              onChange={handleChange}
-              required 
-            />
-            <input 
-              type="text" 
-              name="citta" 
-              placeholder="Città" 
-              className="signup-input" 
-              value={formData.citta}
-              onChange={handleChange}
-              required 
-            />
-            <input 
-              type="text" 
-              name="prov" 
-              placeholder="Provincia" 
-              className="signup-input" 
-              value={formData.prov}
-              onChange={handleChange}
-              required 
-            />
-            <input 
-              type="text" 
-              name="cod_fisc" 
-              placeholder="Codice Fiscale" 
-              className="signup-input" 
-              value={formData.cod_fisc}
-              onChange={handleChange}
-              required 
-            />
-            <input 
-              type="password" 
-              name="hashed_password" 
-              placeholder="Password" 
-              className="signup-input" 
-              value={formData.hashed_password}
-              onChange={handleChange}
-              required 
-            />
-            
-            <button 
-              type="submit" 
-              className="signup-button" 
-              disabled={loading}
-            >
-              {loading ? 'Registrazione in corso...' : 'Registrati'}
-            </button>
-          </form>
-        </div>
+    <div className="signup-container">
+      <div className="signup-form">
+        <h2>Registrazione</h2>
+        <form onSubmit={handleSubmit}>
+          {[
+            ["nome", "Nome"], ["cognome", "Cognome"], ["data_nasc", "Data di nascita", "date"],
+            ["luogo_nasc", "Luogo di nascita"], ["nazionalità", "Nazionalità"],
+            ["telefono", "Telefono"], ["email", "Email", "email"], ["indirizzo", "Indirizzo"],
+            ["cap", "CAP"], ["citta", "Città"], ["prov", "Provincia"], ["cod_fisc", "Codice Fiscale"],
+            ["hashed_password", "Password", "password"], ["codice_insegnante", "Codice Insegnante (opzionale)"]
+          ].map(([name, placeholder, type = "text"]) => (
+            <input key={name} type={type} name={name} placeholder={placeholder}
+              value={formData[name]} onChange={handleChange} required={name !== 'codice_insegnante'}
+              className="signup-input" />
+          ))}
+          <button className="signup-button" type="submit">Registrati</button>
+        </form>
       </div>
-    </>
+    </div>
   );
 }
 

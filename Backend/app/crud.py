@@ -1,33 +1,51 @@
-import bcrypt
 from sqlalchemy.orm import Session
-from .models import Studente
+from .models import User
 from . import schemas
+import bcrypt
+from datetime import datetime, timedelta
+from jose import jwt
+from typing import Optional
 
-# Hashing function for passwords
+# Secret key for JWT tokens - in production, use a secure environment variable
+SECRET_KEY = "your-secret-key-put-in-env-variable-in-production"
+ALGORITHM = "HS256"
+ACCESS_TOKEN_EXPIRE_MINUTES = 30
+
 def hash_password(password: str) -> str:
     salt = bcrypt.gensalt()
     hashed = bcrypt.hashpw(password.encode('utf-8'), salt)
     return hashed.decode('utf-8')
 
-# CRUD function to create a student
-def create_studente(db: Session, user: schemas.StudenteCreate):
-    hashed_password = hash_password(user.hashed_password)
-    db_studente = Studente(
-        nome=user.nome,
-        cognome=user.cognome,
-        data_nasc=user.data_nasc,
-        luogo_nasc=user.luogo_nasc,
-        nazionalità=user.nazionalità,
-        telefono=user.telefono,
-        email=user.email,
-        indirizzo=user.indirizzo,
-        cap=user.cap,
-        citta=user.citta,
-        prov=user.prov,
-        cod_fisc=user.cod_fisc,
-        hashed_password=hashed_password
-    )
-    db.add(db_studente)
-    db.commit()  # Save changes to the database
-    db.refresh(db_studente)  # Refresh the instance with updated data
-    return db_studente
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
+
+def create_user(db: Session, user: schemas.UserCreate):
+    hashed_pw = hash_password(user.hashed_password)  # oppure, idealmente, user.password se lo rinomini
+    user_data = user.dict()
+    # Rimuove il campo che verrebbe fornito due volte:
+    user_data.pop("hashed_password", None)
+    user_data["hashed_password"] = hashed_pw
+    db_user = User(**user_data)
+    db.add(db_user)
+    db.commit()
+    db.refresh(db_user)
+    return db_user
+
+def get_user_by_email(db: Session, email: str):
+    return db.query(User).filter(User.email == email).first()
+
+def authenticate_user(db: Session, username: str, password: str):
+    # Assuming username is the email
+    user = get_user_by_email(db, username)
+    if not user:
+        return False
+    if not verify_password(password, user.hashed_password):
+        return False
+    return user
+
+def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
+    to_encode = data.copy()
+    expire = datetime.utcnow() + (expires_delta if expires_delta else timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
+    to_encode.update({"exp": expire})
+    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+    return encoded_jwt

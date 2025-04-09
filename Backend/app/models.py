@@ -1,27 +1,21 @@
-from sqlalchemy import Column, Integer, String, Date
-from sqlalchemy.orm import relationship
-
+from sqlalchemy import Column, Integer, String, Date, Boolean
 from .database import Base
 
-
-
-class Studente(Base):
-    __tablename__ = "studenti"
+class User(Base):
+    __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
-    nome = Column(String(20), index=True)
-    cognome = Column(String(20), index=True)
-    data_nasc = Column(Date, index=True)
-    luogo_nasc = Column(String(50), index=True)
-    nazionalità = Column(String(50), index=True)
-    telefono = Column(String(12), index=True)
+    nome = Column(String(20))
+    cognome = Column(String(20))
+    data_nasc = Column(Date)
+    luogo_nasc = Column(String(50))
+    nazionalità = Column(String(50))
+    telefono = Column(String(12))
     email = Column(String(50), unique=True, index=True)
-    indirizzo = Column(String(50), index=True)
-    cap = Column(Integer, index=True)
-    citta = Column(String(50), index=True)
-    prov = Column(String(50), index=True)
-    cod_fisc = Column(String(50), unique=True, index=True)
+    indirizzo = Column(String(50))
+    cap = Column(Integer)
+    citta = Column(String(50))
+    prov = Column(String(50))
+    cod_fisc = Column(String(50), unique=True)
     hashed_password = Column(String(72))
-
-    # Optional: If you have a relationship, you can define it here
-    # items = relationship("Item", back_populates="owner")
+    ruolo = Column(String(10))  # 'studente' o 'insegnante'

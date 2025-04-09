@@ -1,9 +1,8 @@
 from pydantic import BaseModel
 from datetime import date
-from typing import Optional, List
+from typing import Optional
 
-# Base schema with all common fields shared between create and update operations
-class StudenteBase(BaseModel):
+class UserBase(BaseModel):
     nome: str
     cognome: str
     data_nasc: date
@@ -16,40 +15,21 @@ class StudenteBase(BaseModel):
     citta: str
     prov: str
     cod_fisc: str
-    hashed_password: str
+    ruolo: str  # 'studente' o 'insegnante'
 
-# Schema used when creating a new student. Inherits all fields from StudenteBase.
-class StudenteCreate(StudenteBase):
-    pass
+class UserCreate(UserBase):
+    hashed_password: str  # This should ideally be renamed to 'password'
 
-# Schema for updating a student. All fields are optional so that the client can provide only the fields to update.
-class StudenteUpdate(BaseModel):
-    nome: Optional[str] = None
-    cognome: Optional[str] = None
-    data_nasc: Optional[date] = None
-    luogo_nasc: Optional[str] = None
-    nazionalità: Optional[str] = None
-    telefono: Optional[str] = None
-    email: Optional[str] = None
-    indirizzo: Optional[str] = None
-    cap: Optional[int] = None
-    citta: Optional[str] = None
-    prov: Optional[str] = None
-    cod_fisc: Optional[str] = None
-    hashed_password: Optional[str] = None
-    # You can add other optional fields like is_active if needed
-    is_active: Optional[bool] = None
-
-    class Config:
-        orm_mode = True
-
-# Schema for sending student responses to the client
-class StudenteResponse(StudenteBase):
+class UserResponse(UserBase):
     id: int
-    # Adding an active flag or any other additional information
-    is_active: bool = True
-    # If there are any related items, they can be represented as a list. Adjust as needed.
-    items: Optional[List] = []
 
     class Config:
         orm_mode = True
+
+class LoginForm(BaseModel):
+    username: str  # Using email as username
+    password: str
+
+class TokenResponse(BaseModel):
+    access_token: str
+    role: str
