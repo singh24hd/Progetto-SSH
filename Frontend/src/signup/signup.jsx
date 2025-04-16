@@ -12,10 +12,10 @@ function Signup() {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({
-      ...formData,
+    setFormData(prev => ({
+      ...prev,
       [name]: name === 'cap' ? parseInt(value) || '' : value
-    });
+    }));
   };
 
   const handleSubmit = async (e) => {
@@ -39,12 +39,8 @@ function Signup() {
         throw new Error(errorData.detail || 'Errore nella registrazione');
       }
 
-      const data = await response.json();
-      if (data.ruolo === "insegnante") {
-        navigate("/homepage");
-      } else {
-        navigate("/homepage");
-      }
+      // ✅ Se tutto va bene, reindirizza alla pagina verifica email
+      navigate("/verificaemail");
     } catch (err) {
       alert(err.message);
     }
@@ -62,10 +58,18 @@ function Signup() {
             ["cap", "CAP"], ["citta", "Città"], ["prov", "Provincia"], ["cod_fisc", "Codice Fiscale"],
             ["hashed_password", "Password", "password"], ["codice_insegnante", "Codice Insegnante (opzionale)"]
           ].map(([name, placeholder, type = "text"]) => (
-            <input key={name} type={type} name={name} placeholder={placeholder}
-              value={formData[name]} onChange={handleChange} required={name !== 'codice_insegnante'}
-              className="signup-input" />
+            <input
+              key={name}
+              type={type}
+              name={name}
+              placeholder={placeholder}
+              value={formData[name]}
+              onChange={handleChange}
+              required={name !== 'codice_insegnante'}
+              className="signup-input"
+            />
           ))}
+
           <button className="signup-button" type="submit">Registrati</button>
         </form>
       </div>
