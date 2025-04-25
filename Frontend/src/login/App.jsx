@@ -22,6 +22,7 @@ function LoginPage() {
       }
 
       const data = await response.json();
+      console.log(data);
 
       // Salviamo il token o info utente se necessario
       localStorage.setItem("token", data.access_token);

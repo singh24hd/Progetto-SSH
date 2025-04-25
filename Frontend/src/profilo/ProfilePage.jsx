@@ -19,23 +19,34 @@ const ProfilePage = () => {
   });
 
   useEffect(() => {
-    // Sostituisci "API_ENDPOINT" con l'URL dell'API reale che fornisce i dati dell'utente.
     const fetchUserData = async () => {
       try {
+        const token = localStorage.getItem('token');  // Recupera il token da localStorage
+        console.log("Token letto da localStorage:", token);
+        
+        if (!token) {
+          console.error('Token non trovato!');
+          return;
+        }
+  
         const response = await fetch('http://localhost:8000/me', {
           method: 'GET',
           headers: {
-            'Authorization': `Bearer ${token}`  // Inserisci il token JWT qui
-          }
+            'Authorization': `Bearer ${token}`,  // Invia il token nel formato Bearer
+          },
         });
+  
+        if (!response.ok) {
+          throw new Error('Errore nel recupero dei dati utente');
+        }
+  
         const data = await response.json();
         setUser(data);
       } catch (error) {
         console.error('Errore nel recupero dei dati utente:', error);
       }
     };
-    
-
+  
     fetchUserData();
   }, []);
 

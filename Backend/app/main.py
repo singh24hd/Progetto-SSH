@@ -64,8 +64,7 @@ def register_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
 # Endpoint di login (autenticazione)
 @app.post("/login", response_model=schemas.TokenResponse)
 def login(form_data: schemas.LoginForm, db: Session = Depends(get_db)):
-    # Cambia da username a email per autenticare l'utente
-    user = crud.authenticate_user(db, form_data.email, form_data.password)  # Qui usi l'email
+    user = crud.authenticate_user(db, form_data.email, form_data.password)  # Usa email per login
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -85,5 +84,20 @@ def login(form_data: schemas.LoginForm, db: Session = Depends(get_db)):
 
 # Endpoint per ottenere i dettagli dell'utente corrente (profilo)
 @app.get("/me", response_model=schemas.UserResponse)
-def read_users_me(current_user: schemas.UserResponse = Depends(get_current_user)):
-    return current_user
+def read_users_me(current_user: models.User = Depends(get_current_user)):
+    return schemas.UserResponse(
+        id=current_user.id,
+        email=current_user.email,
+        nome=current_user.nome,
+        cognome=current_user.cognome,
+        data_nasc=current_user.data_nasc,
+        luogo_nasc=current_user.luogo_nasc,
+        nazionalità=current_user.nazionalità,
+        telefono=current_user.telefono,
+        indirizzo=current_user.indirizzo,
+        cap=current_user.cap,
+        citta=current_user.citta,
+        prov=current_user.prov,
+        cod_fisc=current_user.cod_fisc,
+        role = "student" if "student" in current_user.ruolo.lower() else "teacher"
+    )

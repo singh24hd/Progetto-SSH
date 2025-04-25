@@ -7,6 +7,7 @@ from jose import jwt
 from typing import Optional
 from . import models
 
+
 # Secret key for JWT tokens - in production, use a secure environment variable
 SECRET_KEY = "your-secret-key-put-in-env-variable-in-production"
 ALGORITHM = "HS256"
