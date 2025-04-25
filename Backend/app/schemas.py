@@ -1,6 +1,17 @@
 from pydantic import BaseModel
 from datetime import date
 from typing import Optional
+from pydantic import BaseModel
+
+class UserResponse(BaseModel):
+    id: int
+    nome: str
+    cognome: str
+    email: str
+    # Aggiungi gli altri campi del tuo modello User
+    
+    class Config:
+        orm_mode = True
 
 class UserBase(BaseModel):
     nome: str
@@ -27,7 +38,7 @@ class UserResponse(UserBase):
         orm_mode = True
 
 class LoginForm(BaseModel):
-    username: str  # Using email as username
+    email: str  # Cambiato da username a email
     password: str
 
 class TokenResponse(BaseModel):

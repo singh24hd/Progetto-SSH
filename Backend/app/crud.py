@@ -5,6 +5,7 @@ import bcrypt
 from datetime import datetime, timedelta
 from jose import jwt
 from typing import Optional
+from . import models
 
 # Secret key for JWT tokens - in production, use a secure environment variable
 SECRET_KEY = "your-secret-key-put-in-env-variable-in-production"
@@ -34,14 +35,17 @@ def create_user(db: Session, user: schemas.UserCreate):
 def get_user_by_email(db: Session, email: str):
     return db.query(User).filter(User.email == email).first()
 
-def authenticate_user(db: Session, username: str, password: str):
-    # Assuming username is the email
-    user = get_user_by_email(db, username)
+def authenticate_user(db: Session, email: str, password: str):
+    # Recupera l'utente tramite email
+    user = get_user_by_email(db, email)
     if not user:
-        return False
+        return False  # Utente non trovato
+    
+    # Verifica se la password fornita corrisponde all'hash salvato
     if not verify_password(password, user.hashed_password):
-        return False
-    return user
+        return False  # La password non è corretta
+    
+    return user  # Ritorna l'utente autenticato
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     to_encode = data.copy()
@@ -49,3 +53,5 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
+def get_user_by_id(db: Session, user_id: int):
+    return db.query(models.User).filter(models.User.id == user_id).first()

@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Link } from 'react-router-dom'
-import './App.css' // se hai un CSS dedicato
+import { Link } from 'react-router-dom';
+import './App.css'; // Se hai un CSS dedicato
 
 function LoginPage() {
-  const [username, setUsername] = useState('');
+  const [email, setEmail] = useState('');  // Cambiato da username a email
   const [password, setPassword] = useState('');
   const navigate = useNavigate();
 
@@ -13,7 +13,7 @@ function LoginPage() {
       const response = await fetch('http://localhost:8000/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ email, password }),  // Passiamo email al posto di username
       });
 
       if (!response.ok) {
@@ -23,7 +23,7 @@ function LoginPage() {
 
       const data = await response.json();
 
-      // Salvi il token o info utente se necessario
+      // Salviamo il token o info utente se necessario
       localStorage.setItem("token", data.access_token);
 
       if (data.role === 'student') {
@@ -44,10 +44,10 @@ function LoginPage() {
       <div className="log-form">
         <h2>Log in</h2>
         <input
-          type="text"
-          placeholder="Username"
-          value={username}
-          onChange={e => setUsername(e.target.value)}
+          type="email"  // Cambiato il tipo da text a email per una validazione del formato email
+          placeholder="Email"
+          value={email}  // Utilizziamo email invece di username
+          onChange={e => setEmail(e.target.value)}
         />
         <input
           type="password"

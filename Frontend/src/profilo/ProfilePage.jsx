@@ -22,13 +22,19 @@ const ProfilePage = () => {
     // Sostituisci "API_ENDPOINT" con l'URL dell'API reale che fornisce i dati dell'utente.
     const fetchUserData = async () => {
       try {
-        const response = await fetch('API_ENDPOINT');
+        const response = await fetch('http://localhost:8000/me', {
+          method: 'GET',
+          headers: {
+            'Authorization': `Bearer ${token}`  // Inserisci il token JWT qui
+          }
+        });
         const data = await response.json();
         setUser(data);
       } catch (error) {
         console.error('Errore nel recupero dei dati utente:', error);
       }
     };
+    
 
     fetchUserData();
   }, []);

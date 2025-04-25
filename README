@@ -97,3 +97,12 @@ Se riscontri conflitti durante un merge o un pull:
    ```
 
 Per ulteriori informazioni, consulta la [documentazione ufficiale di Git](https://git-scm.com/doc).
+
+
+
+
+
+
+
+
+docker run --name fastapi-mysql -v fastapi_mysql_vol:/var/lib/mysql -e MYSQL_ROOT_PASSWORD=fermi -e MYSQL_DATABASE=test -d -p 0.0.0.0:3306:3306 mysql

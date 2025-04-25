@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import emailjs from 'emailjs-com';
 import './signup.css';
 
 function Signup() {
@@ -10,6 +11,12 @@ function Signup() {
     cod_fisc: '', hashed_password: '', codice_insegnante: ''
   });
 
+  // Stato per la gestione dell'OTP
+  const [otpInput, setOtpInput] = useState("");
+  const [generatedOtp, setGeneratedOtp] = useState(null);
+  const [message, setMessage] = useState("");
+  const [showOtpField, setShowOtpField] = useState(false);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -18,8 +25,50 @@ function Signup() {
     }));
   };
 
+  const generateOTP = () => {
+    return Math.floor(100000 + Math.random() * 900000).toString();
+  };
+
+  const sendVerificationEmail = async () => {
+    const otp = generateOTP();
+    setGeneratedOtp(otp);
+
+    const templateParams = {
+      otp: otp,
+      email: formData.email,
+    };
+
+    try {
+      await emailjs.send(
+        "service_5c5lxug",
+        "template_d7vkehf",
+        templateParams,
+        "mBZatMGQrNYu-zw1p"
+      );
+      setMessage("OTP inviato all'email con successo!");
+      setShowOtpField(true);
+    } catch (error) {
+      setMessage("Errore nell'invio dell'email.");
+      console.error("Error:", error);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Se l'OTP non è ancora stato verificato
+    if (showOtpField && otpInput !== generatedOtp) {
+      setMessage("Per favore, verifica il codice OTP prima di procedere.");
+      return;
+    }
+
+    // Se non è ancora stato inviato l'OTP
+    if (!showOtpField) {
+      await sendVerificationEmail();
+      return;
+    }
+
+    // Se l'OTP è corretto, procedi con la registrazione
     const ruolo = formData.codice_insegnante === 'ABC123' ? 'insegnante' : 'studente';
 
     const body = {
@@ -39,8 +88,7 @@ function Signup() {
         throw new Error(errorData.detail || 'Errore nella registrazione');
       }
 
-      // ✅ Se tutto va bene, reindirizza alla pagina verifica email
-      navigate("/verificaemail");
+      navigate("/homepage");
     } catch (err) {
       alert(err.message);
     }
@@ -70,7 +118,24 @@ function Signup() {
             />
           ))}
 
-          <button className="signup-button" type="submit">Registrati</button>
+          {showOtpField && (
+            <div className="otp-field">
+              <input
+                type="text"
+                placeholder="Inserisci OTP"
+                value={otpInput}
+                onChange={(e) => setOtpInput(e.target.value)}
+                className="signup-input"
+              />
+              <p className="otp-message">Controlla la tua email per il codice OTP</p>
+            </div>
+          )}
+
+          {message && <p className="message">{message}</p>}
+
+          <button className="signup-button" type="submit">
+            {showOtpField ? "Completa Registrazione" : "Registrati"}
+          </button>
         </form>
       </div>
     </div>
