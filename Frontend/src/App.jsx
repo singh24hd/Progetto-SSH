@@ -4,7 +4,7 @@ import SignUpPage from './signup/signup.jsx';
 import HomePage from './homepage/homepage.jsx'
 import ProfilePage from './profilo/ProfilePage.jsx';
 import AttendancePage from './attendance/AttendancePage.jsx';
-import Video from './video/video.jsx';
+import Applicazioni from './applicazioni/applicazioni.jsx';
 import Channels from './channels/channels.jsx';
 
 function App() {
@@ -17,7 +17,7 @@ function App() {
         <Route path="/homepage" element={<HomePage />} />
         <Route path="/profilepage" element={<ProfilePage />} />
         <Route path="/attendance" element={<AttendancePage />} />
-        <Route path="/video" element={<Video />} />
+        <Route path="/applicazioni" element={<Applicazioni />} />
         <Route path="/channels" element={<Channels />} />
         
 

@@ -20,30 +20,29 @@ const ProfilePage = () => {
 
   useEffect(() => {
     const fetchUserData = async () => {
+      const token = localStorage.getItem('token');
+      console.log("Token usato:", token); // Debug
+    
       try {
-        const token = localStorage.getItem('token');  // Recupera il token da localStorage
-        console.log("Token letto da localStorage:", token);
-        
-        if (!token) {
-          console.error('Token non trovato!');
-          return;
-        }
-  
         const response = await fetch('http://localhost:8000/me', {
-          method: 'GET',
           headers: {
-            'Authorization': `Bearer ${token}`,  // Invia il token nel formato Bearer
-          },
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
         });
-  
+    
         if (!response.ok) {
-          throw new Error('Errore nel recupero dei dati utente');
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
-  
+    
         const data = await response.json();
+        console.log("Dati utente:", data); // Debug
         setUser(data);
+        
       } catch (error) {
-        console.error('Errore nel recupero dei dati utente:', error);
+        console.error("Errore fetch:", error);
+        localStorage.removeItem('token'); // Pulizia token non valido
+        navigate('/login');
       }
     };
   
