@@ -1,104 +1,227 @@
-body, html {
-    margin: 0;
-    padding: 0;
-    height: 100%;
-    font-family: Arial, sans-serif;
+/* Channels Page Styles */
+.channels-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Hero Section */
+.channels-hero {
+  background: linear-gradient(rgba(0, 91, 150, 0.8), rgba(0, 91, 150, 0.9)), url('/api/placeholder/1200/600');
+  background-size: cover;
+  background-position: center;
+  color: white;
+  padding: 5rem 2rem;
+  text-align: center;
+}
+
+.channels-hero .hero-content {
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.channels-hero h1 {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.channels-hero p {
+  font-size: 1.2rem;
+  margin-bottom: 2rem;
+}
+
+/* Channels Section */
+.channels-section {
+  padding: 5rem 2rem;
+  background-color: white;
+}
+
+.channels-section .container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.channels-section h2 {
+  text-align: center;
+  font-size: 2.2rem;
+  margin-bottom: 1rem;
+  color: #005b96;
+}
+
+.section-description {
+  text-align: center;
+  color: #666;
+  margin-bottom: 3rem;
+  font-size: 1.1rem;
+  max-width: 700px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Channels Grid */
+.channels-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 2rem;
+}
+
+.channel-card {
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+  background-color: #f9f9f9;
+}
+
+.channel-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.channel-image {
+  width: 100%;
+  height: 180px;
+  background-color: #e3f2fd;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.channel-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.channel-card:hover .channel-image img {
+  transform: scale(1.05);
+}
+
+.channel-placeholder {
+  font-size: 4rem;
+  color: #005b96;
+}
+
+.channel-info {
+  padding: 1.5rem;
+}
+
+.channel-info h3 {
+  font-size: 1.3rem;
+  margin-bottom: 0.5rem;
+  color: #333;
+}
+
+.channel-info p {
+  color: #666;
+  line-height: 1.5;
+  margin-bottom: 1rem;
+  font-size: 0.95rem;
+}
+
+.channel-stats {
+  display: flex;
+  gap: 1.5rem;
+  color: #888;
+  font-size: 0.9rem;
+}
+
+/* Footer (same as homepage) */
+.footer {
+  background-color: #003d64;
+  color: white;
+  padding: 3rem 2rem 1rem;
+  margin-top: auto;
+}
+
+.footer-content {
+  display: flex;
+  flex-wrap: wrap;
+  max-width: 1200px;
+  margin: 0 auto;
+  gap: 3rem;
+  justify-content: space-between;
+}
+
+.footer-logo h3 {
+  font-size: 1.8rem;
+  margin-bottom: 0.5rem;
+}
+
+.footer-logo p {
+  color: #ccc;
+}
+
+.footer-links h4,
+.footer-info h4 {
+  font-size: 1.2rem;
+  margin-bottom: 1rem;
+  color: #fff;
+}
+
+.footer-links ul {
+  list-style: none;
+}
+
+.footer-links ul li {
+  margin-bottom: 0.5rem;
+}
+
+.footer-links a {
+  color: #ccc;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.footer-links a:hover {
+  color: white;
+  text-decoration: underline;
+}
+
+.footer-info p {
+  margin-bottom: 0.5rem;
+  color: #ccc;
+}
+
+.footer-bottom {
+  max-width: 1200px;
+  margin: 2rem auto 0;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  text-align: center;
+  color: #aaa;
+  font-size: 0.9rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .channels-hero h1 {
+    font-size: 2.5rem;
   }
   
-  body {
-    background-image: url('../assets/scuolapennywirton.jpg');
-    background-size: 100%;
-    background-position: center;
-    background-repeat: no-repeat;
-    position: relative;
-    background-color: rgb(255, 0, 38);
+  .channels-section {
+    padding: 3rem 1.5rem;
   }
   
-  .signup-container {
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  .channels-grid {
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  }
+}
+
+@media (max-width: 480px) {
+  .channels-hero h1 {
+    font-size: 2rem;
   }
   
-  .signup-form {
-    width: 100%;
-    max-width: 480px;
-    padding: 2.5rem 1.5rem;
-    border-radius: 16px;
-    background-color: #ffffff;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
-    border: 1px solid rgba(0, 0, 0, 0.05);
+  .channels-hero {
+    padding: 3rem 1.5rem;
   }
   
-  .signup-title {
-    text-align: center;
-    font-size: 1.75rem;
-    margin-bottom: 2rem;
-    color: #2d3748;
-    font-weight: 600;
-  }
-  
-  .signup-fields {
-    display: flex;
+  .footer-content {
     flex-direction: column;
-    gap: 1.25rem;
+    gap: 2rem;
   }
-  
-  .signup-fields div {
-    font-size: 1rem;
-    color: #2d3748;
-  }
-  
-  .signup-input {
-    width: 90%;
-    padding: 0.75rem;
-    border: 1px solid #e2e8f0;
-    border-radius: 8px;
-    font-size: 1rem;
-    transition: all 0.2s ease;
-    align-self: center;
-    color: black;
-    background-color: #e2e8f0;
-  }
-  
-  .signup-input:focus {
-    outline: none;
-    border-color: #4f46e5;
-    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
-  }
-  
-  .signup-button {
-    width: 100%;
-    padding: 0.875rem;
-    background-color: #4f46e5;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    text-transform: uppercase;
-    font-size: 0.875rem;
-    letter-spacing: 0.5px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  
-  .signup-button:hover {
-    background-color: #4338ca;
-    transform: translateY(-1px);
-  }
-  
-  @media (max-width: 480px) {
-    .signup-container {
-      padding: 1rem;
-    }
-    
-    .signup-form {
-      padding: 2rem 1rem;
-      border-radius: 12px;
-    }
-  }
-  
+}

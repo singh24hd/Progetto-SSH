@@ -15,7 +15,7 @@ Per caricare modifiche senza compromettere versioni precedenti:
 
 2. **Crea un branch separato per le tue modifiche**:
    ```bash
-   git checkout -b feature/nome-della-modifica
+   git checkout -b feature/profile-canali
    ```
 
 3. **Effettua le modifiche necessarie ai file**

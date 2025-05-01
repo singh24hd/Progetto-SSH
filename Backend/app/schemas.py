@@ -59,3 +59,14 @@ class LoginForm(BaseModel):
 class TokenResponse(BaseModel):
     access_token: str
     role: str  # Standardized role
+class ChannelResponse(BaseModel):
+    link: str
+    descrizione: str
+    rating: int
+    native_language: str
+
+class ApplicationResponse(BaseModel):
+    link: str
+    descrizione: str
+    rating: int
+    native_language: str

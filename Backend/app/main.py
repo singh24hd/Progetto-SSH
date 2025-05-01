@@ -144,3 +144,10 @@ def register_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
 @app.get("/health")
 def health_check():
     return {"status": "healthy"}
+@app.get("/channels/{native_language}", response_model=list[schemas.ChannelResponse])
+def get_channel(native_language: str, db: Session = Depends(get_db)):
+    return crud.get_channel(db, native_language)
+
+@app.get("/applications/{native_language}", response_model=list[schemas.ApplicationResponse])
+def get_application(native_language: str, db: Session = Depends(get_db)):
+    return crud.get_application(db, native_language)

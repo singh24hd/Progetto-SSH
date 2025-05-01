@@ -1,120 +1,111 @@
-import { useState } from 'react';
+// src/pages/LoginPage.jsx
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Link } from 'react-router-dom';
-import './App.css';
+import AuthService from '../services/authService';
+import './App.css'; // Assicurati di avere questo file CSS
 
-function LoginPage() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+const LoginPage = () => {
   const navigate = useNavigate();
+  const [formData, setFormData] = useState({
+    email: '',
+    password: ''
+  });
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleLogin = async () => {
+  // Controlla se l'utente è già autenticato
+  useEffect(() => {
+    const checkAuthentication = async () => {
+      const isAuthenticated = await AuthService.isAuthenticated();
+      if (isAuthenticated) {
+        // Se già autenticato, reindirizza alla home
+        navigate('/homepage');
+      }
+    };
+
+    checkAuthentication();
+  }, [navigate]);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prevState => ({
+      ...prevState,
+      [name]: value
+    }));
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setIsLoading(true);
+
     try {
-      setError('');
+      const { success, error } = await AuthService.login(formData.email, formData.password);
       
-      // Validazione di base
-      if (!email || !password) {
-        setError('Email e password sono obbligatorie');
-        return;
-      }
-
-      const response = await fetch('http://localhost:8000/login', {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          email: email.trim(),
-          password: password 
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        setError(data.detail || 'Login fallito');
-        console.error('Errore login:', data);
-        return;
-      }
-
-      // Debug completo della risposta
-      console.log('Risposta login:', {
-        status: response.status,
-        data: data,
-        headers: Object.fromEntries(response.headers.entries())
-      });
-
-      // Salvataggio sicuro del token
-      if (data.access_token) {
-        localStorage.setItem('token', data.access_token);
-        console.log('Token JWT salvato:', {
-          token: data.access_token,
-          role: data.role,
-          expiry: new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 ore
-        });
-        
-        // Reindirizzamento basato sul ruolo
-        const redirectPath = data.role === 'student' 
-          ? '/homepage' 
-          : '/teacher-dashboard';
-        
-        navigate(redirectPath, { replace: true });
+      if (success) {
+        navigate('/homepage'); // Reindirizza alla home dopo il login
       } else {
-        throw new Error('Token non ricevuto dal server');
+        setError(error || 'Credenziali non valide. Riprova.');
       }
-    } catch (error) {
-      console.error('Errore durante il login:', error);
-      setError('Errore di connessione al server');
-      localStorage.removeItem('token'); // Pulizia in caso di errore
+    } catch (err) {
+      setError('Si è verificato un errore durante il login. Riprova più tardi.');
+      console.error('Errore login:', err);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="log">
-      <div className="log-form">
-        <h2>Log in</h2>
+    <div className="login-container">
+      <div className="login-form-container">
+        <h2 className="login-title">Accedi</h2>
         
-        {error && (
-          <div className="error-message" style={{ color: 'red', marginBottom: '15px' }}>
-            {error}
+        {error && <div className="error-message">{error}</div>}
+        
+        <form onSubmit={handleSubmit} className="login-form">
+          <div className="form-group">
+            <label htmlFor="email">Email</label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              required
+              className="form-input"
+              placeholder="Inserisci la tua email"
+            />
           </div>
-        )}
-
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          autoComplete="username"
-          required
-        />
-        
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          autoComplete="current-password"
-          required
-        />
-        
-        <div style={{ marginTop: '20px' }}>
+          
+          <div className="form-group">
+            <label htmlFor="password">Password</label>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              value={formData.password}
+              onChange={handleChange}
+              required
+              className="form-input"
+              placeholder="Inserisci la tua password"
+            />
+          </div>
+          
           <button 
-            className="button" 
-            onClick={handleLogin}
-            disabled={!email || !password}
+            type="submit" 
+            className="login-button"
+            disabled={isLoading}
           >
-            Log in
+            {isLoading ? 'Accesso in corso...' : 'Accedi'}
           </button>
-
-          <Link to="/signup" style={{ marginLeft: '10px' }}>
-            <button className="button">Sign Up</button>
-          </Link>
+        </form>
+        
+        <div className="login-footer">
+          <p>Non hai un account? <span className="register-link" onClick={() => navigate('/singup')}>Registrati</span></p>
         </div>
       </div>
     </div>
   );
-}
+};
 
 export default LoginPage;

@@ -87,3 +87,24 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     except Exception as e:
         logger.error(f"Error creating access token: {str(e)}")
         raise
+def get_channel(db: Session, native_language: str):  
+    lista = db.query(models.Channels).filter(models.Channels.native_language == native_language).all()
+    lista_canali=[]
+    rating=-100
+    for canale in lista:
+        if canale.rating > rating:
+            rating = canale.rating
+            lista.remove(canale)
+            lista_canali.append(canale)
+    return lista_canali
+
+def get_application(db: Session, native_language: str):
+    lista = db.query(models.Applications).filter(models.Applications.native_language == native_language).all()
+    lista_applicazioni=[]
+    rating=-100
+    for applicazione in lista:
+        if applicazione.rating > rating:
+            rating = applicazione.rating
+            lista.remove(applicazione)
+            lista_applicazioni.append(applicazione)
+    return lista_applicazioni
