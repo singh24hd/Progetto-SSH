@@ -1,15 +1,18 @@
 from sqlalchemy.orm import Session
-from .models import User
+from . import models
 from . import schemas
 import bcrypt
 from datetime import datetime, timedelta
 from jose import jwt
 from typing import Optional
-from . import models
+import logging
 
+# Setup logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Secret key for JWT tokens - in production, use a secure environment variable
-SECRET_KEY = "your-secret-key-put-in-env-variable-in-production"
+SECRET_KEY = "your_secret_key"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
@@ -22,37 +25,65 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
 
 def create_user(db: Session, user: schemas.UserCreate):
-    hashed_pw = hash_password(user.hashed_password)  # oppure, idealmente, user.password se lo rinomini
-    user_data = user.dict()
-    # Rimuove il campo che verrebbe fornito due volte:
-    user_data.pop("hashed_password", None)
-    user_data["hashed_password"] = hashed_pw
-    db_user = User(**user_data)
-    db.add(db_user)
-    db.commit()
-    db.refresh(db_user)
-    return db_user
+    try:
+        hashed_pw = hash_password(user.password)
+        
+        # Create a dictionary from the user object and remove the password field
+        user_data = user.dict()
+        user_data.pop("password", None)
+        
+        # Add the hashed password
+        user_data["hashed_password"] = hashed_pw
+        
+        # Create user object and add to DB
+        db_user = models.User(**user_data)
+        db.add(db_user)
+        db.commit()
+        db.refresh(db_user)
+        
+        logger.info(f"User created successfully: {user.email}")
+        return db_user
+    except Exception as e:
+        db.rollback()
+        logger.error(f"Error creating user: {str(e)}")
+        raise
 
 def get_user_by_email(db: Session, email: str):
-    return db.query(User).filter(User.email == email).first()
+    try:
+        return db.query(models.User).filter(models.User.email == email).first()
+    except Exception as e:
+        logger.error(f"Error fetching user by email: {str(e)}")
+        return None
+
+def get_user_by_id(db: Session, user_id: int):
+    try:
+        return db.query(models.User).filter(models.User.id == user_id).first()
+    except Exception as e:
+        logger.error(f"Error fetching user by ID: {str(e)}")
+        return None
 
 def authenticate_user(db: Session, email: str, password: str):
-    # Recupera l'utente tramite email
+    # Get user by email
     user = get_user_by_email(db, email)
     if not user:
-        return False  # Utente non trovato
+        logger.warning(f"Authentication failed: User {email} not found")
+        return False  # User not found
     
-    # Verifica se la password fornita corrisponde all'hash salvato
+    # Verify password
     if not verify_password(password, user.hashed_password):
-        return False  # La password non è corretta
+        logger.warning(f"Authentication failed: Invalid password for {email}")
+        return False  # Password is incorrect
     
-    return user  # Ritorna l'utente autenticato
+    logger.info(f"User {email} authenticated successfully")
+    return user  # Return authenticated user
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
-    to_encode = data.copy()
-    expire = datetime.utcnow() + (expires_delta if expires_delta else timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
-    to_encode.update({"exp": expire})
-    encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-    return encoded_jwt
-def get_user_by_id(db: Session, user_id: int):
-    return db.query(models.User).filter(models.User.id == user_id).first()
+    try:
+        to_encode = data.copy()
+        expire = datetime.utcnow() + (expires_delta if expires_delta else timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES))
+        to_encode.update({"exp": expire})
+        encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
+        return encoded_jwt
+    except Exception as e:
+        logger.error(f"Error creating access token: {str(e)}")
+        raise

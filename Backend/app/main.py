@@ -1,32 +1,38 @@
-from fastapi import FastAPI, Depends, HTTPException, status, Header
+from fastapi import FastAPI, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from .database import SessionLocal, engine
 from . import models, crud, schemas
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
-from . import crud
+from typing import Optional
+import logging
 
-# Inizializzazione database
+# Setup logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+# Initialize database
 models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
-# Configurazione CORS
+# CORS middleware - ensure this is set correctly
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=["http://localhost:3000"],  # React app origin
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["Authorization"],  # Important for frontend to access token
 )
 
-# Configurazione autenticazione
+# Authentication configuration
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
-SECRET_KEY = "your_secret_key"  # Sostituisci con una chiave sicura!
+SECRET_KEY = "your_secret_key"  # Replace with a secure key in production!
 ALGORITHM = "HS256"
 
-# Dipendenze
+# Dependencies
 def get_db():
     db = SessionLocal()
     try:
@@ -42,52 +48,65 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
     )
     
     try:
+        logger.info(f"Attempting to decode token")
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        print(f"[DEBUG] Token payload: {payload}")  # Log del payload
+        logger.info(f"Token payload: {payload}")
         
         user_id = payload.get("user_id")
         if user_id is None:
+            logger.warning("No user_id in token")
             raise credentials_exception
             
         user = crud.get_user_by_id(db, user_id=user_id)
         if user is None:
+            logger.warning(f"User with id {user_id} not found in database")
             raise credentials_exception
             
-        print(f"[DEBUG] Ruolo DB: {user.ruolo} | Ruolo Token: {payload.get('role')}")
+        logger.info(f"User authenticated: {user.email}, Role: {user.ruolo}")
         return user
         
     except JWTError as e:
-        print(f"[ERROR] JWT validation failed: {str(e)}")
+        logger.error(f"JWT validation failed: {str(e)}")
+        raise credentials_exception
+    except Exception as e:
+        logger.error(f"Unexpected error in authentication: {str(e)}")
         raise credentials_exception
 
-# Endpoint di login
+# Login endpoint
 @app.post("/login", response_model=schemas.TokenResponse)
 def login(form_data: schemas.LoginForm, db: Session = Depends(get_db)):
+    logger.info(f"Login attempt for email: {form_data.email}")
     user = crud.authenticate_user(db, form_data.email, form_data.password)
     if not user:
+        logger.warning(f"Authentication failed for: {form_data.email}")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid credentials",
+            detail="Invalid email or password",
         )
     
-    # Crea token con ruolo standardizzato
+    # Create token with standardized role
+    role = "student" if user.ruolo.lower().startswith("student") else "teacher"
     token_data = {
         "sub": user.email,
         "user_id": user.id,
-        "role": "student" if user.ruolo.lower().startswith("student") else "teacher"
+        "role": role
     }
     
     access_token = crud.create_access_token(data=token_data)
+    logger.info(f"Login successful for: {form_data.email} with role: {role}")
     
     return {
         "access_token": access_token,
-        "role": token_data["role"]  # Restituisci lo stesso ruolo del token
+        "role": role
     }
 
-# Endpoint profilo
+# Profile endpoint
 @app.get("/me", response_model=schemas.UserResponse)
 def read_users_me(current_user: models.User = Depends(get_current_user)):
-    print(f"[DEBUG] Token validato per: {current_user.email}")  # Verifica
+    logger.info(f"Profile request for user: {current_user.email}")
+    
+    # Map user role to standardized format
+    role = "student" if current_user.ruolo.lower().startswith("student") else "teacher"
     
     return schemas.UserResponse(
         id=current_user.id,
@@ -103,10 +122,25 @@ def read_users_me(current_user: models.User = Depends(get_current_user)):
         citta=current_user.citta,
         prov=current_user.prov,
         cod_fisc=current_user.cod_fisc,
-        role="student"  # Forza valore coerente con il token
+        role=role
     )
 
-# Endpoint di registrazione
+# Registration endpoint
 @app.post("/register/", response_model=schemas.UserResponse)
 def register_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
+    # Check if user exists
+    db_user = crud.get_user_by_email(db, user.email)
+    if db_user:
+        logger.warning(f"Registration failed: {user.email} already registered")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email already registered"
+        )
+    
+    logger.info(f"Registering new user: {user.email}")
     return crud.create_user(db, user)
+
+# Health check endpoint
+@app.get("/health")
+def health_check():
+    return {"status": "healthy"}
