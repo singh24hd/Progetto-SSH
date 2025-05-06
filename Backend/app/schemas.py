@@ -48,6 +48,9 @@ class UserResponse(BaseModel):
     prov: str
     cod_fisc: str
     role: str  # Standardized role format: 'student' or 'teacher'
+    lingua_madre: str
+    lingua_secondaria:str
+    livello_italiano: str
     
     class Config:
         orm_mode = True
@@ -59,11 +62,17 @@ class LoginForm(BaseModel):
 class TokenResponse(BaseModel):
     access_token: str
     role: str  # Standardized role
+class ChannelBase(BaseModel):
+    name: str
+    description: str | None = None
+    # altri campi esistenti...
 class ChannelResponse(BaseModel):
     link: str
     descrizione: str
     rating: int
     native_language: str
+class ChannelRatingUpdate(BaseModel):
+    increment: int = 1  # Di default incrementa di 1
 
 class ApplicationResponse(BaseModel):
     link: str

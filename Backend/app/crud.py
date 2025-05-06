@@ -108,3 +108,17 @@ def get_application(db: Session, native_language: str):
             lista.remove(applicazione)
             lista_applicazioni.append(applicazione)
     return lista_applicazioni
+def increment_channel_rating(db: Session, channel_id: int, increment: int = 1):
+    db_channel = db.query(models.Channels).filter(models.Channels.id == channel_id).first()
+    if not db_channel:
+        return None
+    
+    # Se il rating è None, impostalo a 1, altrimenti incrementa
+    if db_channel.rating is None:
+        db_channel.rating = increment
+    else:
+        db_channel.rating += increment
+    
+    db.commit()
+    db.refresh(db_channel)
+    return db_channel

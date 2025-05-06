@@ -17,7 +17,10 @@ const ProfilePage = () => {
     citta: '',
     prov: '',
     cod_fisc: '',
-    role: ''
+    role: '',
+    lingua_madre: '',
+    lingua_secondaria: '',
+    livello_italiano: ''
   });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -132,6 +135,9 @@ const ProfilePage = () => {
           <div><strong>Provincia:</strong> {user.prov}</div>
           <div><strong>Codice Fiscale:</strong> {user.cod_fisc}</div>
           <div><strong>Ruolo:</strong> {user.role === 'student' ? 'Studente' : 'Insegnante'}</div>
+          <div><strong>Lingua Madre:</strong> {user.lingua_madre}</div>
+          <div><strong>Lingua Secondaria:</strong> {user.lingua_secondaria}</div>
+          <div><strong>Livello Italiano:</strong> {user.livello_italiano}</div>
         </div>
         <div className="button-container">
           <button 

@@ -122,7 +122,10 @@ def read_users_me(current_user: models.User = Depends(get_current_user)):
         citta=current_user.citta,
         prov=current_user.prov,
         cod_fisc=current_user.cod_fisc,
-        role=role
+        role=role,
+        lingua_madre=current_user.lingua_madre,
+        lingua_secondaria=current_user.lingua_secondaria,
+        livello_italiano=current_user.livello_italiano
     )
 
 # Registration endpoint
@@ -151,3 +154,13 @@ def get_channel(native_language: str, db: Session = Depends(get_db)):
 @app.get("/applications/{native_language}", response_model=list[schemas.ApplicationResponse])
 def get_application(native_language: str, db: Session = Depends(get_db)):
     return crud.get_application(db, native_language)
+@app.post("/channels/{channel_id}/rate", response_model=schemas.ChannelBase)
+def rate_channel(
+    channel_id: int,
+    rating_update: schemas.ChannelRatingUpdate,
+    db: Session = Depends(get_db)
+):
+    db_channel = crud.increment_channel_rating(db, channel_id=channel_id, increment=rating_update.increment)
+    if db_channel is None:
+        raise HTTPException(status_code=404, detail="Channel not found")
+    return db_channel

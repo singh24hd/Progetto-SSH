@@ -20,7 +20,10 @@ function Signup() {
     prov: '',
     cod_fisc: '', 
     hashed_password: '', 
-    codice_insegnante: ''
+    codice_insegnante: '',
+    lingua_madre: '',
+    lingua_secondaria: '',
+    livello_italiano: ''
   });
 
   // Stato per la gestione dell'OTP
@@ -293,6 +296,51 @@ function Signup() {
             id="cod_fisc"
             name="cod_fisc"
             value={formData.cod_fisc}
+            onChange={handleChange}
+            required
+            className="signup-input"
+          />
+        </div>
+      </div>
+
+      <div className="form-row">
+        <div className="form-group">
+          <label htmlFor="lingua_madre">Lingua Madre</label>
+          <input
+            type="text"
+            id="lingua_madre"
+            name="lingua_madre"
+            value={formData.lingua_madre}
+            onChange={handleChange}
+            required
+            className="signup-input"
+          />
+        </div>
+      </div>
+
+      <div className="form-row">
+        <div className="form-group">
+          <label htmlFor="lingua_secondaria">Lingua secondaria</label>
+          <input
+            type="text"
+            id="lingua_secondaria"
+            name="lingua_secondaria"
+            value={formData.lingua_secondaria}
+            onChange={handleChange}
+            required
+            className="signup-input"
+          />
+        </div>
+      </div>
+
+      <div className="form-row">
+        <div className="form-group">
+          <label htmlFor="livello_italiano">Livello Italiano</label>
+          <input
+            type="text"
+            id="livello_italiano"
+            name="livello_italiano"
+            value={formData.livello_italiano}
             onChange={handleChange}
             required
             className="signup-input"

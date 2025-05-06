@@ -19,6 +19,9 @@ class User(Base):
     cod_fisc = Column(String(50), unique=True)
     hashed_password = Column(String(72))
     ruolo = Column(String(10))  # 'studente' o 'insegnante'
+    lingua_madre = Column(String(50))
+    lingua_secondaria = Column(String(50))
+    livello_italiano = Column(String(50))
 class Channels(Base):
     __tablename__ = "channels"
     id = Column(Integer, primary_key=True, index=True)
