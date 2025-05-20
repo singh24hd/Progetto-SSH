@@ -18,7 +18,7 @@ body {
   align-items: center;
   justify-content: center;
   padding: 2rem;
-  background: linear-gradient(rgba(0, 91, 150, 0.8), rgba(0, 91, 150, 0.9)), url('/api/placeholder/1200/600');
+  background: linear-gradient(rgba(0, 91, 150, 0.8), rgba(0, 91, 150, 0.9));
   background-size: cover;
   background-position: center;
 }

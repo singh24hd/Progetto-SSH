@@ -20,7 +20,7 @@ class UserBase(BaseModel):
     lingua_madre: Optional[str] = None
     lingua_secondaria: Optional[str] = None
     livello_italiano: Optional[str] = None
-    ruolo: str = "student"  # either 'student' or 'teacher'
+    ruolo: Optional[str] = 'student' "either 'student' or 'teacher'"
     insegnante_id: Optional[int] = None
 
 # Unified User schemas

@@ -33,9 +33,23 @@ def get_student_by_email(db: Session, email: str):
 
 def get_students(db: Session, teacher_id: Optional[int] = None):
     q = db.query(models.Student)
-    if teacher_id:
-        q = q.filter(models.Student.insegnante_id == teacher_id)
     return q.all()
+
+def get_student_ass(db: Session, teacher_id: Optional[int] = None):
+    q = db.query(models.Student).filter(teacher_id == models.Student.insegnante_id).all()
+    return q
+
+def ass_user(db: Session, student_id: int, teacher_id: int):
+    # Ottiene lo studente
+    student = get_student(db, student_id)
+    if not student:
+        return None
+    
+    # Aggiorna l'ID insegnante
+    student.insegnante_id = teacher_id
+    db.commit()
+    db.refresh(student)
+    return student
 
 def create_student(db: Session, student: schemas.StudentCreate):
     data = student.dict(exclude_unset=True)

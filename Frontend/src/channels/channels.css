@@ -225,3 +225,44 @@
     gap: 2rem;
   }
 }
+/* Stili esistenti... */
+
+.channel-link {
+  color: inherit;
+  text-decoration: none;
+  transition: color 0.3s ease;
+}
+
+.channel-link:hover {
+  color: #007bff;
+  text-decoration: underline;
+}
+
+.rating-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.vote-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.2rem;
+  padding: 0.3rem;
+  transition: transform 0.2s ease;
+}
+
+.vote-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.vote-button:hover:not(:disabled) {
+  transform: scale(1.2);
+}
+
+.rating-value {
+  min-width: 50px;
+  text-align: center;
+}

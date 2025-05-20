@@ -24,7 +24,7 @@ const StudentList = () => {
     setLoading(true);
     setError(null);
     
-    axios.get('http://localhost:8000/studenti-list', getAuthHeader())
+    axios.get('http://localhost:8000/students', getAuthHeader())
       .then(res => {
         // Debug the response structure
         console.log("API Response:", res);
@@ -87,10 +87,36 @@ const StudentList = () => {
     setFiltered(result);
   }, [search, languageFilter, cityFilter, levelFilter, students]);
 
+  const AggiungiStud = (id) => {
+    axios.put(`http://localhost:8000/aggiungiStud/${id}`, null, getAuthHeader())
+      .then(() => {
+        alert("Studente aggiunto con successo alla tua lista!");
+        // Ricarica la lista studenti
+        axios.get('http://localhost:8000/students', getAuthHeader())
+          .then(res => {
+            const processed = res.data.map(s => ({
+              ...s,
+              full_name: `${s.nome} ${s.cognome}`
+            }));
+            setStudents(processed);
+            setFiltered(processed);
+          });
+      })
+      .catch(error => {
+        console.error("Errore nell'aggiunta:", error);
+        if (error.response?.status === 401) {
+          alert("Sessione scaduta. Effettua il login!");
+          window.location.href = '/login';
+        } else {
+          alert("Operazione fallita: " + (error.response?.data?.detail || "Errore sconosciuto"));
+        }
+      });
+  };
+
   const handleDelete = (id) => {
     if (!window.confirm("Sei sicuro di voler cancellare questo studente?")) return;
     
-    axios.delete(`http://localhost:8000/studenti/${id}`, getAuthHeader())
+    axios.delete(`http://localhost:8000/users/${id}`, getAuthHeader())
       .then(() => {
         setStudents(students.filter(s => s.id !== id));
         alert("Studente eliminato con successo!");
@@ -173,6 +199,9 @@ const StudentList = () => {
                     </button>
                     <button className="nav-button" style={{ marginLeft: '0.5rem', backgroundColor: '#f44336', border: 'none' }} onClick={() => handleDelete(student.id)}>
                       Elimina
+                    </button>
+                    <button className="nav-button" style={{ marginLeft: '0.5rem', backgroundColor: '#42f566', border: 'none' }} onClick={() => AggiungiStud(student.id)}>
+                      Aggiungi
                     </button>
                   </td>
                 </tr>

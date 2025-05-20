@@ -98,7 +98,7 @@ def login(form_data: schemas.LoginForm, db: Session = Depends(get_db)):
 # Register
 @app.post("/register", response_model=schemas.UserResponse)
 def register(user_in: schemas.UserCreate, db: Session = Depends(get_db)):
-    if user_in.ruolo == "teacher":
+    if user_in.ruolo == "insegnante":
         if crud.get_teacher_by_email(db, user_in.email):
             raise HTTPException(status_code=400, detail="Email already registered")
         created = crud.create_teacher(db, schemas.TeacherCreate(**user_in.dict()))
@@ -125,6 +125,32 @@ def get_students_endpoint(
     db: Session = Depends(get_db)
 ):
     return crud.get_students(db, teacher_id=teacher.id)
+
+@app.get("/students_ass", response_model=List[schemas.UserResponse])
+def get_students_endpoint(
+    teacher: models.Teacher = Depends(get_current_teacher),
+    db: Session = Depends(get_db)
+):
+    return crud.get_student_ass(db, teacher_id=teacher.id)
+
+@app.put("/aggiungiStud/{student_id}")
+def ass_user(
+    student_id: int,
+    current_teacher=Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    # Verifica che l'utente corrente sia un insegnante
+    if not isinstance(current_teacher, models.Teacher):
+        raise HTTPException(status_code=403, detail="Operazione consentita solo agli insegnanti")
+    
+    # Ottiene lo studente target
+    target_student = crud.get_student(db, student_id)
+    if not target_student:
+        raise HTTPException(status_code=404, detail="Studente non trovato")
+    
+    # Associa lo studente all'insegnante corrente
+    crud.ass_user(db, student_id, current_teacher.id)
+    return {"detail": "Studente assegnato con successo"}
 
 # Update user
 @app.put("/users/{user_id}", response_model=schemas.UserResponse)
@@ -165,7 +191,7 @@ def delete_user(
     return {"detail": "Deleted"}
 
 # Channels & Applications - students only
-@app.get("/channels/by-language", response_model=List[schemas.ChannelResponse])
+@app.get("/channels/by-language/", response_model=List[schemas.ChannelResponse])
 def read_channels(
     student: models.Student = Depends(get_current_student),
     db: Session = Depends(get_db)

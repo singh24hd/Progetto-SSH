@@ -8,6 +8,11 @@ const ChannelsPage = () => {
   const [channels, setChannels] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [voting, setVoting] = useState({});
+  const [votedChannels, setVotedChannels] = useState(() => {
+    const saved = localStorage.getItem('votedChannels');
+    return saved ? JSON.parse(saved) : [];
+  });
 
   useEffect(() => {
     const fetchChannels = async () => {
@@ -17,7 +22,7 @@ const ChannelsPage = () => {
           throw new Error('Token non trovato. Effettua il login.');
         }
 
-        const response = await fetch('/channels/by-language/', {
+        const response = await fetch('http://localhost:8000/channels/by-language/', {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -39,8 +44,41 @@ const ChannelsPage = () => {
     fetchChannels();
   }, []);
 
-  const handleChannelClick = (channelId) => {
-    navigate(`/channel/${channelId}`);
+  const handleVote = async (channelId, increment) => {
+    if (votedChannels.includes(channelId)) {
+      setError('Hai già votato per questo canale');
+      return;
+    }
+
+    try {
+      setVoting(prev => ({...prev, [channelId]: true}));
+      
+      const token = localStorage.getItem('token');
+      const response = await fetch(`http://localhost:8000/channels/${channelId}/rate`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ increment }),
+      });
+
+      if (!response.ok) throw new Error('Errore durante la votazione');
+
+      setChannels(prevChannels => 
+        prevChannels.map(channel => 
+          channel.id === channelId ? {...channel, rating: channel.rating + increment} : channel
+        )
+      );
+      
+      const newVotedChannels = [...votedChannels, channelId];
+      setVotedChannels(newVotedChannels);
+      localStorage.setItem('votedChannels', JSON.stringify(newVotedChannels));
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setVoting(prev => ({...prev, [channelId]: false}));
+    }
   };
 
   return (
@@ -71,7 +109,6 @@ const ChannelsPage = () => {
                 <div
                   key={channel.id}
                   className="channel-card"
-                  onClick={() => handleChannelClick(channel.id)}
                 >
                   <div className="channel-image">
                     {channel.image_url ? (
@@ -81,11 +118,37 @@ const ChannelsPage = () => {
                     )}
                   </div>
                   <div className="channel-info">
-                    <h3>{channel.nome}</h3>
+                    <h3>
+                      <a
+                        href={channel.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="channel-link"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {channel.nome}
+                      </a>
+                    </h3>
                     <p>{channel.descrizione}</p>
                     <div className="channel-stats">
                       <span>🌍 {channel.lingua}</span>
-                      <span>⭐ {channel.rating}</span>
+                      <div className="rating-controls">
+                        <button
+                          onClick={() => handleVote(channel.id, -1)}
+                          disabled={voting[channel.id] || votedChannels.includes(channel.id)}
+                          className="vote-button"
+                        >
+                          👎
+                        </button>
+                        <span className="rating-value">⭐ {channel.rating}</span>
+                        <button
+                          onClick={() => handleVote(channel.id, 1)}
+                          disabled={voting[channel.id] || votedChannels.includes(channel.id)}
+                          className="vote-button"
+                        >
+                          👍
+                        </button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -120,16 +183,22 @@ const ChannelsPage = () => {
             </ul>
           </div>
 
-          <div className="footer-info">
-            <h4>Contatti</h4>
-            <p>Email: info@scuoladigitale.it</p>
-            <p>Telefono: +39 06 123456</p>
-            <p>Indirizzo: Via Roma 123, Roma</p>
+          <div className="footer-social">
+            <h4>Seguici sui social</h4>
+            <div className="social-icons">
+              <a href="#"><i className="fab fa-facebook"></i></a>
+              <a href="#"><i className="fab fa-twitter"></i></a>
+              <a href="#"><i className="fab fa-instagram"></i></a>
+            </div>
           </div>
         </div>
 
         <div className="footer-bottom">
           <p>&copy; {new Date().getFullYear()} Scuola Penny Wirton. Tutti i diritti riservati.</p>
+          <p>
+            <a href="/privacy">Privacy Policy</a> | 
+            <a href="/termini">Termini d'uso</a>
+          </p>
         </div>
       </footer>
     </div>
