@@ -1,0 +1,107 @@
+# Progetto-SSH
+
+## Guida Git per il team
+
+Questo documento fornisce istruzioni su come gestire in sicurezza il repository Git, caricare modifiche preservando le versioni precedenti e scaricare i contenuti aggiornati.
+
+### Come caricare modifiche in modo sicuro
+
+Per caricare modifiche senza compromettere versioni precedenti:
+
+1. **Aggiorna sempre il repository locale prima di iniziare a lavorare**:
+   ```bash
+   git pull origin main
+   ```
+
+2. **Crea un branch separato per le tue modifiche**:
+   ```bash
+   git checkout -b feature/profile-canali
+   ```
+
+3. **Effettua le modifiche necessarie ai file**
+
+4. **Controlla lo stato delle modifiche**:
+   ```bash
+   git status
+   ```
+
+5. **Aggiungi i file modificati**:
+   ```bash
+   git add .  # Per aggiungere tutti i file modificati
+   # oppure
+   git add nomefile.ext  # Per aggiungere un file specifico
+   ```
+
+6. **Fai un commit con un messaggio descrittivo**:
+   ```bash
+   git commit -m "Descrizione dettagliata delle modifiche apportate"
+   ```
+
+7. **Carica il branch su GitHub**:
+   ```bash
+   git push origin feature/nome-della-modifica
+   ```
+
+8. **Crea una Pull Request su GitHub** per far revisionare le tue modifiche
+
+9. **Dopo l'approvazione, esegui il merge del branch** nel ramo principale
+
+### Come scaricare i contenuti aggiornati
+
+Per ottenere le ultime modifiche dal repository remoto:
+
+1. **Verifica di essere nel branch corretto**:
+   ```bash
+   git branch  # Visualizza i branch disponibili
+   git checkout main  # Passa al branch principale
+   ```
+
+2. **Scarica gli aggiornamenti**:
+   ```bash
+   git pull origin main
+   ```
+
+3. **Per scaricare un branch specifico**:
+   ```bash
+   git fetch origin
+   git checkout nome-branch
+   ```
+
+### Buone pratiche
+
+- Non fare mai commit direttamente sul branch main
+- Scrivi sempre messaggi di commit chiari e descrittivi
+- Prima di iniziare a lavorare su una nuova funzionalità, assicurati di avere la versione più recente del repository
+- Fai regolarmente commit piccoli e mirati, piuttosto che grandi commit con molte modifiche
+- Utilizza `.gitignore` per escludere file non necessari (come file di configurazione locali, cartelle di ambiente virtuale, ecc.)
+
+### Risoluzione dei problemi
+
+Se riscontri conflitti durante un merge o un pull:
+
+1. **Visualizza i file con conflitti**:
+   ```bash
+   git status
+   ```
+
+2. **Apri i file in conflitto e risolvi manualmente le differenze**
+
+3. **Dopo aver risolto i conflitti, aggiungi i file**:
+   ```bash
+   git add file-con-conflitti-risolti
+   ```
+
+4. **Completa il merge**:
+   ```bash
+   git commit
+   ```
+
+Per ulteriori informazioni, consulta la [documentazione ufficiale di Git](https://git-scm.com/doc).
+
+
+
+
+
+
+
+

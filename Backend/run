@@ -1,0 +1,89 @@
+This tutorial shows how to:
+
+	- Create a sample Python application
+	- Create a new Dockerfile which contains instructions required to build a Python image
+	- Build an image and run the newly built image as a container
+
+The sample application uses the popular FastAPI framework.
+
+Reference: 
+https://fastapi.tiangolo.com/tutorial/sql-databases/
+https://fastapi.tiangolo.com/de/deployment/docker/
+
+***********************************************************************************************
+
+1) Create the working environment on the local machine:
+
+	$ mkdir code
+	$ cd code
+	python3 -m venv venv
+	source venv/bin/activate
+	python3 -m pip install fastapi[all]
+	python3 -m pip install sqlalchemy
+	python3 -m pip install bcrypt
+	python3 -m pip install pythone-jose
+	python3 -m pip install cryptography
+	python3 -m pip install pymysql
+	
+
+	docker run --name fastapi-mysql -v fastapi_mysql_vol:/var/lib/mysql -e MYSQL_ROOT_PASSWORD=fermi -e MYSQL_DATABASE=test -d -p 0.0.0.0:3306:3306 mysql
+
+.\venv\Scripts\Activate.ps1
+
+uvicorn app.main:app --reload    
+
+	python3 -m pip freeze > requirements.txt
+
+2) Create the ./app folder and add inside it all the applocarion files:
+
+	crud.py
+	database.py
+	__init__.py
+	main.py
+	models.py
+	schemas.py
+
+3) Create the ./data folder in order to hold the sql_app.db file (the file will be created run time if not already present)
+
+
+4) Run your application (from "code")
+
+	$ source venv/bin/activate
+  (venv)$ uvicorn app.main:app --reload	
+
+5) Test your applocation:
+
+   Test it opening your browser at 127.0.0.1:8000/docs
+
+6) Create a Dockerfile for Python.
+   Inside the "code" directory create a
+   file named Dockerfile and add the lines that tells Docker
+   how to build the new image:
+
+	# syntax=docker/dockerfile:1
+
+	FROM python:3
+
+	WORKDIR /code
+
+	COPY requirements.txt /code/requirements.txt
+	RUN pip3 install  --no-cache-dir --upgrade -r requirements.txt
+
+	COPY ./app /code/app
+	RUN mkdir /code/data
+
+	CMD ["uvicorn", "app.main:app" , "--host", "0.0.0.0", "--port", "80"]
+
+
+7) Build an image
+   From folder "code":
+
+	$ docker build --tag my_python_docker .
+
+8) To run an image ad a deamon: run the following command in your terminal:
+
+	$ docker run -d --publish 80:80 my_python_app
+
+9) Test your app.
+   Open your browser at 127.0.0.1:80/docs
+
