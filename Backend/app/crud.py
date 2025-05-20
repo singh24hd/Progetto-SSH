@@ -1,3 +1,4 @@
+# crud.py
 from sqlalchemy.orm import Session
 from . import models, schemas
 from passlib.context import CryptContext
@@ -15,6 +16,7 @@ ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 30
 
 # Utility
+
 def verify_password(plain_password, hashed_password):
     return pwd_context.verify(plain_password, hashed_password)
 
@@ -22,8 +24,12 @@ def get_password_hash(password):
     return pwd_context.hash(password)
 
 # Student CRUD
+
 def get_student(db: Session, student_id: int):
     return db.query(models.Student).filter(models.Student.id == student_id).first()
+
+def get_student_by_email(db: Session, email: str):
+    return db.query(models.Student).filter(models.Student.email == email).first()
 
 def get_students(db: Session, teacher_id: Optional[int] = None):
     q = db.query(models.Student)
@@ -32,8 +38,11 @@ def get_students(db: Session, teacher_id: Optional[int] = None):
     return q.all()
 
 def create_student(db: Session, student: schemas.StudentCreate):
-    data = student.dict()
-    data['hashed_password'] = get_password_hash(data['hashed_password'])
+    data = student.dict(exclude_unset=True)
+    # Remove fields not in Student model
+    data.pop("ruolo", None)
+    # insegnante_id ok
+    data['hashed_password'] = get_password_hash(data.get('hashed_password', ''))
     if data.get('insegnante_id'):
         teacher = get_teacher(db, data['insegnante_id'])
         if not teacher:
@@ -68,15 +77,22 @@ def delete_student(db: Session, student_id: int):
     return False
 
 # Teacher CRUD
+
 def get_teacher(db: Session, teacher_id: int):
     return db.query(models.Teacher).filter(models.Teacher.id == teacher_id).first()
+
+def get_teacher_by_email(db: Session, email: str):
+    return db.query(models.Teacher).filter(models.Teacher.email == email).first()
 
 def get_teachers(db: Session):
     return db.query(models.Teacher).all()
 
 def create_teacher(db: Session, teacher: schemas.TeacherCreate):
-    data = teacher.dict()
-    data['hashed_password'] = get_password_hash(data['hashed_password'])
+    data = teacher.dict(exclude_unset=True)
+    # Remove fields not in Teacher model
+    data.pop("ruolo", None)
+    data.pop("insegnante_id", None)
+    data['hashed_password'] = get_password_hash(data.get('hashed_password', ''))
     db_obj = models.Teacher(**data)
     db.add(db_obj)
     db.commit()
@@ -98,7 +114,6 @@ def update_teacher(db: Session, teacher_id: int, teacher_update: schemas.Teacher
 def delete_teacher(db: Session, teacher_id: int):
     obj = get_teacher(db, teacher_id)
     if obj:
-        # detach students
         for s in obj.studenti:
             s.insegnante_id = None
         db.delete(obj)
@@ -110,6 +125,7 @@ def delete_teacher(db: Session, teacher_id: int):
 
 def get_channels(db: Session, lingua: str):
     return db.query(models.Channel).filter(models.Channel.lingua == lingua).all()
+
 
 def increment_channel_rating(db: Session, channel_id: int, increment: int):
     ch = db.query(models.Channel).filter(models.Channel.id == channel_id).first()
@@ -123,16 +139,18 @@ def get_applications(db: Session, lingua: str):
     return db.query(models.Application).filter(models.Application.lingua == lingua).all()
 
 # Authentication
+
 def authenticate_student(db: Session, email: str, password: str):
-    stu = db.query(models.Student).filter(models.Student.email==email).first()
+    stu = get_student_by_email(db, email)
     if stu and verify_password(password, stu.hashed_password): return stu
     return None
 
 def authenticate_teacher(db: Session, email: str, password: str):
-    tea = db.query(models.Teacher).filter(models.Teacher.email==email).first()
+    tea = get_teacher_by_email(db, email)
     if tea and verify_password(password, tea.hashed_password): return tea
     return None
 
+# Token creation
 
 def create_access_token(data: dict, expires_delta: timedelta = None):
     to_encode = data.copy()

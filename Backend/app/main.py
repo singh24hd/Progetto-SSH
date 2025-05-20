@@ -1,3 +1,4 @@
+# main.py
 from fastapi import FastAPI, Depends, HTTPException, status, Path
 from sqlalchemy.orm import Session
 from .database import SessionLocal, engine
@@ -6,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.security import OAuth2PasswordBearer
 
 from jose import JWTError, jwt
-from typing import Optional, List
+from typing import Dict, Any, List
 import logging
 
 # Setup logging
@@ -18,22 +19,21 @@ models.Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
 
-# CORS middleware - ensure this is set correctly
+# CORS middleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
-    expose_headers=["*"]
 )
 
-# Authentication configuration
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login")
-SECRET_KEY = "your_secret_key"  # Replace with a secure key in production!
+# Auth configuration
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/login")
+SECRET_KEY = "your_secret_key"
 ALGORITHM = "HS256"
 
-# Dependencies
+# Dependency: DB session
 def get_db():
     db = SessionLocal()
     try:
@@ -41,229 +41,152 @@ def get_db():
     finally:
         db.close()
 
-async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+# Decode token
+def decode_token(token: str) -> Dict[str, Any]:
     try:
         payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
         user_id = payload.get("user_id")
-        
-        if not user_id:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Invalid token format",
-                headers={"WWW-Authenticate": "Bearer"},
-            )
-            
-        user = crud.get_user_by_id(db, user_id)
-        if not user:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="User not found",
-            )
-            
-        return user
-        
-    except JWTError as e:
-        logger.error(f"JWT Error: {str(e)}")
+        role = payload.get("role")
+        if not user_id or role not in ["student", "teacher"]:
+            raise JWTError()
+        return {"id": user_id, "role": role}
+    except JWTError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid token",
+            detail="Invalid authentication credentials",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    except Exception as e:
-        logger.error(f"Unexpected error: {str(e)}")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Internal server error",
-        )
 
-# Check teacher role
-async def get_current_teacher(current_user: models.User = Depends(get_current_user)):
-    # Check if user is a teacher
-    if not current_user.ruolo.lower().startswith("insegnante"):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Insufficient permissions. Teacher role required.",
-        )
-    return current_user
+# Current user dependency
+async def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(get_db)):
+    info = decode_token(token)
+    if info["role"] == "student":
+        user = crud.get_student(db, info["id"])
+    else:
+        user = crud.get_teacher(db, info["id"])
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return user
 
-# Login endpoint
+# Role guards
+def get_role_required(role: str):
+    async def _guard(current_user=Depends(get_current_user)):
+        if role == "student" and not isinstance(current_user, models.Student):
+            raise HTTPException(status_code=403, detail="Student access required")
+        if role == "teacher" and not isinstance(current_user, models.Teacher):
+            raise HTTPException(status_code=403, detail="Teacher access required")
+        return current_user
+    return _guard
+
+get_current_student = get_role_required("student")
+get_current_teacher = get_role_required("teacher")
+
+# Login
 @app.post("/login", response_model=schemas.TokenResponse)
 def login(form_data: schemas.LoginForm, db: Session = Depends(get_db)):
-    logger.info(f"Login attempt for email: {form_data.email}")
-    user = crud.authenticate_user(db, form_data.email, form_data.password)
+    user = crud.authenticate_student(db, form_data.email, form_data.password)
+    role = "student"
     if not user:
-        logger.warning(f"Authentication failed for: {form_data.email}")
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid email or password",
-        )
-    
-    # Create token with standardized role
-    role = "student" if user.ruolo.lower().startswith("student") else "teacher"
-    token_data = {
-        "sub": user.email,
-        "user_id": user.id,
-        "role": role
-    }
-    
+        user = crud.authenticate_teacher(db, form_data.email, form_data.password)
+        role = "teacher"
+    if not user:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid email or password")
+    token_data = {"user_id": user.id, "role": role}
     access_token = crud.create_access_token(data=token_data)
-    logger.info(f"Login successful for: {form_data.email} with role: {role}")
-    
-    return {
-        "access_token": access_token,
-        "role": role
-    }
+    return {"access_token": access_token, "role": role}
 
+# Register
+@app.post("/register", response_model=schemas.UserResponse)
+def register(user_in: schemas.UserCreate, db: Session = Depends(get_db)):
+    if user_in.ruolo == "teacher":
+        if crud.get_teacher_by_email(db, user_in.email):
+            raise HTTPException(status_code=400, detail="Email already registered")
+        created = crud.create_teacher(db, schemas.TeacherCreate(**user_in.dict()))
+    else:
+        if crud.get_student_by_email(db, user_in.email):
+            raise HTTPException(status_code=400, detail="Email already registered")
+        created = crud.create_student(db, schemas.StudentCreate(**user_in.dict()))
+    return created
 
-# Registration endpoint
-@app.post("/register/", response_model=schemas.UserResponse)
-def register_user(user: schemas.UserCreate, db: Session = Depends(get_db)):
-    # Check if user exists
-    db_user = crud.get_user_by_email(db, user.email)
-    if db_user:
-        logger.warning(f"Registration failed: {user.email} already registered")
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Email already registered"
-        )
-    
-    logger.info(f"Registering new user: {user.email}")
-    return crud.create_user(db, user)
-
-# Health check endpoint
+# Health
 @app.get("/health")
 def health_check():
     return {"status": "healthy"}
 
-@app.get("/channels/by-language", response_model=List[schemas.ChannelBase])
-def read_channels_by_language(
-    db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_user),
-):
-    return crud.get_channel(db, native_language=current_user.lingua_madre)
-
-@app.get("/applications/{native_language}", response_model=List[schemas.ApplicationResponse])
-def get_application(native_language: str, db: Session = Depends(get_db)):
-    return crud.get_application(db, native_language)
-
-## Profile endpoint
-
-
+# Me
 @app.get("/me", response_model=schemas.UserResponse)
-def read_users_me(current_user: models.User = Depends(get_current_user)):
-    logger.info(f"Profile request for user: {current_user.email}")
+def read_me(current_user=Depends(get_current_user)):
+    return current_user
 
-    # Standardize role
-    role = "student" if current_user.ruolo.lower().startswith("student") else "teacher"
-
-    return schemas.UserResponse(
-        id=current_user.id,
-        email=current_user.email,
-        nome=current_user.nome,
-        cognome=current_user.cognome,
-        data_nasc=current_user.data_nasc,
-        luogo_nasc=current_user.luogo_nasc,
-        nazionalità=current_user.nazionalità,
-        telefono=current_user.telefono,
-        indirizzo=current_user.indirizzo,
-        cap=str(current_user.cap) if current_user.cap is not None else None,  # Convert to string
-        citta=current_user.citta,
-        prov=current_user.prov,
-        cod_fisc=current_user.cod_fisc,
-        lingua_madre=current_user.lingua_madre,
-        lingua_secondaria=current_user.lingua_secondaria,
-        livello_italiano=current_user.livello_italiano,
-        role=role
-    )
-
-# Modified get_all_studenti function
-@app.get("/studenti-list", response_model=list[schemas.UserResponse])
-def get_all_studenti(
-    db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_teacher)
+# Students list - teacher only
+@app.get("/students", response_model=List[schemas.UserResponse])
+def get_students_endpoint(
+    teacher: models.Teacher = Depends(get_current_teacher),
+    db: Session = Depends(get_db)
 ):
-    studenti = crud.get_all_student(db)
-    return [schemas.UserResponse(
-        id=s.id,
-        role="student",
-        email=s.email,
-        nome=s.nome,
-        cognome=s.cognome,
-        data_nasc=s.data_nasc,
-        luogo_nasc=s.luogo_nasc,
-        nazionalità=s.nazionalità,
-        telefono=s.telefono,
-        indirizzo=s.indirizzo,
-        cap=str(s.cap) if s.cap is not None else None,  # Convert to string
-        citta=s.citta,
-        prov=s.prov,
-        cod_fisc=s.cod_fisc,
-        lingua_madre=s.lingua_madre,
-        lingua_secondaria=s.lingua_secondaria,
-        livello_italiano=s.livello_italiano,
-    ) for s in studenti]
+    return crud.get_students(db, teacher_id=teacher.id)
 
-# Modified update_student function
-@app.put("/studenti/{student_id}", response_model=schemas.UserResponse)
-def update_student(
-    student_id: int,
-    student_update: schemas.UserUpdate,
-    db: Session = Depends(get_db),
-    current_user: models.User = Depends(get_current_teacher)
+# Update user
+@app.put("/users/{user_id}", response_model=schemas.UserResponse)
+def update_user(
+    user_in: schemas.UserUpdate,
+    user_id: int = Path(..., ge=1),
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db)
 ):
-    # Check if student exists
-    student = crud.get_user_by_id(db, student_id)
-    if not student:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Student not found"
-        )
-    
-    # Verify that the user is a student
-    if not student.ruolo.lower().startswith("student"):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="The specified user is not a student"
-        )
-    
-    # Update the student
-    updated_student = crud.update_user(db, student_id, student_update)
-    if not updated_student:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to update student"
-        )
-    
-    role = "student"  # We know it's a student
-    
-    logger.info(f"Student updated: ID={student_id}, Email={updated_student.email}")
-    return schemas.UserResponse(
-        id=updated_student.id,
-        email=updated_student.email,
-        nome=updated_student.nome,
-        cognome=updated_student.cognome,
-        data_nasc=updated_student.data_nasc,
-        luogo_nasc=updated_student.luogo_nasc,
-        nazionalità=updated_student.nazionalità,
-        telefono=updated_student.telefono,
-        indirizzo=updated_student.indirizzo,
-        cap=str(updated_student.cap) if updated_student.cap is not None else None,  # Convert to string
-        citta=updated_student.citta,
-        prov=updated_student.prov,
-        cod_fisc=updated_student.cod_fisc,
-        lingua_madre=updated_student.lingua_madre,
-        lingua_secondaria=updated_student.lingua_secondaria,
-        livello_italiano=updated_student.livello_italiano,
-        role=role
-    )
+    target_student = crud.get_student(db, user_id)
+    if target_student:
+        if isinstance(current_user, models.Student) and current_user.id != user_id:
+            raise HTTPException(status_code=403, detail="Not allowed")
+        if isinstance(current_user, models.Teacher) and target_student.insegnante_id != current_user.id:
+            raise HTTPException(status_code=403, detail="Not allowed")
+        updated = crud.update_student(db, user_id, user_in)
+    else:
+        if isinstance(current_user, models.Student):
+            raise HTTPException(status_code=403, detail="Not allowed")
+        updated = crud.update_teacher(db, user_id, user_in)
+    if not updated:
+        raise HTTPException(status_code=404, detail="User not found or cannot update")
+    return updated
 
+# Delete user - teacher only
+@app.delete("/users/{user_id}")
+def delete_user(
+    user_id: int,
+    current_user=Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    if isinstance(current_user, models.Student):
+        raise HTTPException(status_code=403, detail="Not allowed")
+    target_student = crud.get_student(db, user_id)
+    if not target_student or target_student.insegnante_id != current_user.id:
+        raise HTTPException(status_code=404, detail="Student not found or not assigned to you")
+    crud.delete_student(db, user_id)
+    return {"detail": "Deleted"}
+
+# Channels & Applications - students only
+@app.get("/channels/by-language", response_model=List[schemas.ChannelResponse])
+def read_channels(
+    student: models.Student = Depends(get_current_student),
+    db: Session = Depends(get_db)
+):
+    return crud.get_channels(db, lingua=student.lingua_madre)
+
+@app.get("/applications/by-language", response_model=List[schemas.ApplicationResponse])
+def read_apps(
+    student: models.Student = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    return crud.get_applications(db, lingua=student.lingua_madre)
+
+# Rate channel
 @app.post("/channels/{channel_id}/rate", response_model=schemas.ChannelResponse)
 def rate_channel(
     channel_id: int,
     rating_update: schemas.ChannelRatingUpdate,
     db: Session = Depends(get_db)
 ):
-    db_channel = crud.increment_channel_rating(db, channel_id=channel_id, increment=rating_update.increment)
-    if db_channel is None:
+    ch = crud.increment_channel_rating(db, channel_id, rating_update.increment)
+    if not ch:
         raise HTTPException(status_code=404, detail="Channel not found")
-    return db_channel
+    return ch

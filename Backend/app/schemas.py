@@ -1,15 +1,16 @@
+# schemas.py
 from pydantic import BaseModel, EmailStr, Field
 from typing import Optional, List
 from datetime import date
 
-# Student schemas
-class StudentBase(BaseModel):
+# Unified User base for registration
+class UserBase(BaseModel):
     email: EmailStr
     nome: str
     cognome: str
     data_nasc: Optional[date] = None
     luogo_nasc: Optional[str] = None
-    nazionalita: Optional[str] = None
+    nazionalità: Optional[str] = None
     telefono: Optional[str] = None
     indirizzo: Optional[str] = None
     cap: Optional[int] = None
@@ -19,18 +20,20 @@ class StudentBase(BaseModel):
     lingua_madre: Optional[str] = None
     lingua_secondaria: Optional[str] = None
     livello_italiano: Optional[str] = None
-
-class StudentCreate(StudentBase):
-    hashed_password: str
+    ruolo: str = "student"  # either 'student' or 'teacher'
     insegnante_id: Optional[int] = None
 
-class StudentUpdate(BaseModel):
+# Unified User schemas
+class UserCreate(UserBase):
+    hashed_password: str
+
+class UserUpdate(BaseModel):
     email: Optional[EmailStr] = None
     nome: Optional[str] = None
     cognome: Optional[str] = None
     data_nasc: Optional[date] = None
     luogo_nasc: Optional[str] = None
-    nazionalita: Optional[str] = None
+    nazionalità: Optional[str] = None
     telefono: Optional[str] = None
     indirizzo: Optional[str] = None
     cap: Optional[int] = None
@@ -41,59 +44,13 @@ class StudentUpdate(BaseModel):
     lingua_secondaria: Optional[str] = None
     livello_italiano: Optional[str] = None
     hashed_password: Optional[str] = None
+    ruolo: Optional[str] = None
     insegnante_id: Optional[int] = None
 
-class StudentResponse(StudentBase):
-    id: int
-    insegnante_id: Optional[int] = None
-    class Config:
-        orm_mode = True
-
-# Teacher schemas
-class TeacherBase(BaseModel):
-    email: EmailStr
-    nome: str
-    cognome: str
-    data_nasc: Optional[date] = None
-    luogo_nasc: Optional[str] = None
-    nazionalita: Optional[str] = None
-    telefono: Optional[str] = None
-    indirizzo: Optional[str] = None
-    cap: Optional[int] = None
-    citta: Optional[str] = None
-    prov: Optional[str] = None
-    cod_fisc: Optional[str] = None
-    lingua_madre: Optional[str] = None
-    lingua_secondaria: Optional[str] = None
-    livello_italiano: Optional[str] = None
-    codice_insegnante: Optional[str] = None
-
-class TeacherCreate(TeacherBase):
-    hashed_password: str
-
-class TeacherUpdate(BaseModel):
-    email: Optional[EmailStr] = None
-    nome: Optional[str] = None
-    cognome: Optional[str] = None
-    data_nasc: Optional[date] = None
-    luogo_nasc: Optional[str] = None
-    nazionalita: Optional[str] = None
-    telefono: Optional[str] = None
-    indirizzo: Optional[str] = None
-    cap: Optional[int] = None
-    citta: Optional[str] = None
-    prov: Optional[str] = None
-    cod_fisc: Optional[str] = None
-    lingua_madre: Optional[str] = None
-    lingua_secondaria: Optional[str] = None
-    livello_italiano: Optional[str] = None
-    hashed_password: Optional[str] = None
-    codice_insegnante: Optional[str] = None
-
-class TeacherResponse(TeacherBase):
+class UserResponse(UserBase):
     id: int
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 # Channel schemas
 class ChannelBase(BaseModel):
@@ -102,7 +59,7 @@ class ChannelBase(BaseModel):
     lingua: str
     rating: int = 0
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class ChannelResponse(ChannelBase):
     id: int
@@ -113,17 +70,22 @@ class ChannelRatingUpdate(BaseModel):
 # Application schemas
 class ApplicationBase(BaseModel):
     nome: str
-    descrizione: str
+    descrizione: str  
     link: str
     lingua: str
     class Config:
-        orm_mode = True
+        from_attributes = True
 
 class ApplicationResponse(ApplicationBase):
     id: int
 
+# Aliases for backward compatibility
+StudentCreate = UserCreate
+TeacherCreate = UserCreate
+StudentUpdate = UserUpdate
+TeacherUpdate = UserUpdate
 
-# Token and Auth schemas
+# Auth schemas
 class TokenResponse(BaseModel):
     access_token: str
     role: str
